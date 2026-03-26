@@ -1,4 +1,4 @@
-internal import Expo
+import Expo
 import React
 import ReactAppDependencyProvider
 
@@ -19,6 +19,7 @@ class AppDelegate: ExpoAppDelegate {
 
     reactNativeDelegate = delegate
     reactNativeFactory = factory
+    bindReactNativeFactory(factory)
 
 #if os(iOS) || os(tvOS)
     window = UIWindow(frame: UIScreen.main.bounds)

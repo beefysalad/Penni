@@ -54,7 +54,22 @@ export const createPlannedItemSchema = z.object({
   recurrence: recurrenceFrequencySchema,
 });
 
+export const createBudgetSchema = z.object({
+  name: z.string().trim().min(1, 'Budget name is required.').max(120),
+  amount: z
+    .string()
+    .trim()
+    .min(1, 'Amount is required.')
+    .regex(/^\d+(\.\d{1,2})?$/, 'Use a valid amount like 5000 or 5000.00.'),
+  currency: z.string().trim().length(3, 'Use a 3-letter currency code.'),
+  alertThreshold: z.number().int().min(1).max(100),
+  periodStart: z.string().datetime(),
+  periodEnd: z.string().datetime(),
+  categoryId: z.string().trim().optional(),
+});
+
 export type CreateAccountFormValues = z.infer<typeof createAccountSchema>;
 export type CreateCategoryFormValues = z.infer<typeof createCategorySchema>;
 export type CreateTransactionFormValues = z.infer<typeof createTransactionSchema>;
 export type CreatePlannedItemFormValues = z.infer<typeof createPlannedItemSchema>;
+export type CreateBudgetFormValues = z.infer<typeof createBudgetSchema>;

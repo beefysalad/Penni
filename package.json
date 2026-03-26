@@ -4,8 +4,11 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "expo start -c",
+    "dev:client": "expo start --dev-client --clear",
     "android": "expo start -c --android",
     "ios": "expo start -c --ios",
+    "ios:run": "expo run:ios",
+    "ios:device": "expo run:ios --device",
     "web": "expo start -c --web",
     "clean": "rm -rf .expo node_modules"
   },

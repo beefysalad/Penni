@@ -7,23 +7,117 @@ import { useAuth, useUser } from '@clerk/clerk-expo';
 import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
 import {
-  GoalIcon,
-  ShapesIcon,
+  BotIcon,
   ChevronRightIcon,
   CreditCardIcon,
+  GoalIcon,
   LogOutIcon,
+  PenLineIcon,
   Settings2Icon,
+  ShapesIcon,
+  ShieldCheckIcon,
   UserRoundIcon,
 } from 'lucide-react-native';
 import { Pressable, ScrollView, View } from 'react-native';
 
-const SETTINGS_ITEMS = [
-  { label: 'Personal details', icon: UserRoundIcon, href: '/personal-details' },
-  { label: 'Connected accounts', icon: CreditCardIcon, href: '/connected-accounts' },
-  { label: 'Categories', icon: ShapesIcon, href: '/categories' },
-  { label: 'Budgets', icon: GoalIcon, href: '/budgets' },
-  { label: 'Preferences', icon: Settings2Icon, href: '/preferences' },
-] as const;
+// ─── Settings items ───────────────────────────────────────────────────────────
+
+const ACCOUNT_ITEMS = [
+  {
+    label: 'Personal details',
+    description: 'Name, email, and identity',
+    icon: UserRoundIcon,
+    iconBg: 'bg-[#1a2c1f]',
+    iconColor: '#8bff62',
+    href: '/personal-details' as const,
+  },
+  {
+    label: 'Connected accounts',
+    description: 'Linked banks and wallets',
+    icon: CreditCardIcon,
+    iconBg: 'bg-[#1a262d]',
+    iconColor: '#5aa9ff',
+    href: '/connected-accounts' as const,
+  },
+];
+
+const FINANCE_ITEMS = [
+  {
+    label: 'Categories',
+    description: 'Organize spending and income',
+    icon: ShapesIcon,
+    iconBg: 'bg-[#231b33]',
+    iconColor: '#c89dff',
+    href: '/categories' as const,
+  },
+  {
+    label: 'Budgets',
+    description: 'Set monthly limits by category',
+    icon: GoalIcon,
+    iconBg: 'bg-[#2a2518]',
+    iconColor: '#ffc857',
+    href: '/budgets' as const,
+  },
+];
+
+const APP_ITEMS = [
+  {
+    label: 'AI Chat',
+    description: 'Natural-language command assistant',
+    icon: BotIcon,
+    iconBg: 'bg-[#16231b]',
+    iconColor: '#8bff62',
+    href: '/ai-chat' as const,
+  },
+  {
+    label: 'Preferences',
+    description: 'Currency, appearance, and defaults',
+    icon: Settings2Icon,
+    iconBg: 'bg-[#18221d]',
+    iconColor: '#41d6b2',
+    href: '/preferences' as const,
+  },
+];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatMemberSince(dateStr?: string | null) {
+  if (!dateStr) return null;
+  return new Intl.DateTimeFormat('en-PH', {
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(dateStr));
+}
+
+// ─── Settings row ─────────────────────────────────────────────────────────────
+
+type SettingsItem = {
+  label: string;
+  description: string;
+  icon: typeof UserRoundIcon;
+  iconBg: string;
+  iconColor: string;
+  href: string;
+};
+
+function SettingsRow({ item }: { item: SettingsItem }) {
+  return (
+    <Pressable
+      className="flex-row items-center gap-3 rounded-[20px] bg-[#131b17] px-4 py-3.5"
+      onPress={() => router.push(item.href as any)}>
+      <View className={`size-10 items-center justify-center rounded-[14px] ${item.iconBg}`}>
+        <item.icon color={item.iconColor} size={18} />
+      </View>
+      <View className="flex-1">
+        <Text className="text-[15px] font-semibold text-[#f4f7f5]">{item.label}</Text>
+        <Text className="mt-0.5 text-xs text-[#6d786f]">{item.description}</Text>
+      </View>
+      <ChevronRightIcon color="#4a5650" size={18} />
+    </Pressable>
+  );
+}
+
+// ─── Main screen ──────────────────────────────────────────────────────────────
 
 export default function SettingsScreen() {
   const { user } = useUser();
@@ -37,11 +131,13 @@ export default function SettingsScreen() {
     .slice(0, 2)
     .map((name) => name[0]?.toUpperCase())
     .join('');
+  const memberSince = formatMemberSince(user?.createdAt?.toString());
 
   return (
     <View className="flex-1 bg-[#060b08]">
       <StatusBar style="light" />
-      <ScrollView className="flex-1" contentContainerClassName="pb-32" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1" contentContainerClassName="pb-44" showsVerticalScrollIndicator={false}>
+        {/* ─── Header ─────────────────────────────────────────────────────── */}
         <View className="rounded-b-[36px] bg-[#0b120e] px-6 pb-8 pt-safe pt-4">
           <AppPageHeader
             eyebrow="Your account"
@@ -52,45 +148,93 @@ export default function SettingsScreen() {
         </View>
 
         <View className="gap-5 px-6 pt-6">
-          <View className="rounded-[32px] border border-[#1b2a21] bg-[#0d1411] p-6">
+          {/* ─── Profile card ──────────────────────────────────────────────── */}
+          <View className="rounded-[30px] border border-[#1b2a21] bg-[#111916] p-5">
             <View className="flex-row items-center gap-4">
-              <Avatar alt={`${userName}'s avatar`} className="size-20 border-2 border-[#8bff62]/25">
+              <Avatar alt={`${userName}'s avatar`} className="size-[72px] border-2 border-[#8bff62]/25">
                 <AvatarImage source={user?.imageUrl ? { uri: user.imageUrl } : undefined} />
                 <AvatarFallback className="bg-[#131d17]">
                   <Text className="text-xl font-semibold text-[#8bff62]">{initials}</Text>
                 </AvatarFallback>
               </Avatar>
               <View className="flex-1">
-                <Text className="text-[28px] font-semibold text-white">{userName}</Text>
-                <Text className="mt-2 text-[15px] leading-6 text-[#95a39c]">{email}</Text>
+                <Text className="text-[24px] font-semibold text-white" numberOfLines={1}>
+                  {userName}
+                </Text>
+                <Text className="mt-1 text-[14px] text-[#7f8c86]" numberOfLines={1}>
+                  {email}
+                </Text>
               </View>
+            </View>
+
+            {/* Member since + badges */}
+            <View className="mt-4 flex-row items-center gap-2">
+              {memberSince ? (
+                <View className="flex-row items-center gap-1.5 rounded-full bg-[#18221d] px-3 py-1.5">
+                  <ShieldCheckIcon color="#8bff62" size={12} />
+                  <Text className="text-[11px] font-semibold text-[#93a19a]">
+                    Member since {memberSince}
+                  </Text>
+                </View>
+              ) : null}
+              <Pressable
+                className="flex-row items-center gap-1.5 rounded-full bg-[#18221d] px-3 py-1.5"
+                onPress={() => router.push('/personal-details')}>
+                <PenLineIcon color="#8bff62" size={12} />
+                <Text className="text-[11px] font-semibold text-[#8bff62]">Edit profile</Text>
+              </Pressable>
             </View>
           </View>
 
+          {/* ─── Account settings ──────────────────────────────────────────── */}
           <View className="rounded-[30px] border border-[#17211c] bg-[#0f1512] p-5">
-            <Text className="text-[24px] font-semibold text-[#f4f7f5]">Profile and account</Text>
-            <View className="mt-5 gap-3">
-              {SETTINGS_ITEMS.map((item) => (
-                <Pressable
-                  key={item.label}
-                  className="flex-row items-center gap-4 rounded-[24px] bg-[#131b17] px-4 py-4"
-                  onPress={() => router.push(item.href)}>
-                  <View className="size-12 items-center justify-center rounded-full bg-[#1a2c1f]">
-                    <Icon as={item.icon} className="size-5 text-[#8bff62]" />
-                  </View>
-                  <Text className="flex-1 text-base font-semibold text-[#f4f7f5]">{item.label}</Text>
-                  <Icon as={ChevronRightIcon} className="size-5 text-[#6d786f]" />
-                </Pressable>
+            <Text className="text-xs font-semibold uppercase tracking-[2px] text-[#6d786f]">
+              Account
+            </Text>
+            <View className="mt-4 gap-2">
+              {ACCOUNT_ITEMS.map((item) => (
+                <SettingsRow key={item.label} item={item} />
               ))}
             </View>
           </View>
 
+          {/* ─── Finance settings ──────────────────────────────────────────── */}
+          <View className="rounded-[30px] border border-[#17211c] bg-[#0f1512] p-5">
+            <Text className="text-xs font-semibold uppercase tracking-[2px] text-[#6d786f]">
+              Finance
+            </Text>
+            <View className="mt-4 gap-2">
+              {FINANCE_ITEMS.map((item) => (
+                <SettingsRow key={item.label} item={item} />
+              ))}
+            </View>
+          </View>
+
+          {/* ─── App settings ──────────────────────────────────────────────── */}
+          <View className="rounded-[30px] border border-[#17211c] bg-[#0f1512] p-5">
+            <Text className="text-xs font-semibold uppercase tracking-[2px] text-[#6d786f]">
+              App
+            </Text>
+            <View className="mt-4 gap-2">
+              {APP_ITEMS.map((item) => (
+                <SettingsRow key={item.label} item={item} />
+              ))}
+            </View>
+          </View>
+
+          {/* ─── Log out ───────────────────────────────────────────────────── */}
           <Pressable
-            className="mt-1 flex-row items-center justify-center gap-2 rounded-[24px] bg-[#1d1416] px-5 py-4"
+            className="flex-row items-center justify-center gap-2 rounded-[24px] bg-[#1d1416] px-5 py-4"
             onPress={() => signOut()}>
-            <Icon as={LogOutIcon} className="size-5 text-[#ff8a94]" />
+            <LogOutIcon color="#ff8a94" size={18} />
             <Text className="text-base font-semibold text-[#ff8a94]">Log out</Text>
           </Pressable>
+
+          {/* ─── Footer ────────────────────────────────────────────────────── */}
+          <View className="items-center py-4">
+            <Text className="text-xs text-[#4a5650]">Penni v1.0.0</Text>
+
+          </View>
         </View>
       </ScrollView>
 

@@ -6,9 +6,11 @@ import { Icon } from '@/components/ui/icon';
 import { Pill } from '@/components/ui/pill';
 import { Text } from '@/components/ui/text';
 import { useAccountsQuery } from '@/features/finance/hooks/use-accounts-query';
+import { useBudgetsQuery } from '@/features/finance/hooks/use-budgets-query';
 import { useCategoriesQuery } from '@/features/finance/hooks/use-categories-query';
 import { usePlannedItemsQuery } from '@/features/finance/hooks/use-planned-items-query';
 import { useTransactionsQuery } from '@/features/finance/hooks/use-transactions-query';
+import type { Budget } from '@/features/finance/lib/finance.types';
 import { useUser } from '@clerk/clerk-expo';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -24,7 +26,7 @@ import {
   TrendingUpIcon,
   WalletCardsIcon,
 } from 'lucide-react-native';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -60,6 +62,23 @@ function getGreeting() {
   return 'Good evening';
 }
 
+function getSpentForBudget(
+  budget: Budget,
+  transactions: { amount: string; currency: string; categoryId: string | null; transactionAt: string; type: string }[],
+) {
+  const start = new Date(budget.periodStart);
+  const end = new Date(budget.periodEnd);
+
+  return transactions
+    .filter((t) => {
+      if (t.type !== 'EXPENSE') return false;
+      if (budget.categoryId && t.categoryId !== budget.categoryId) return false;
+      const txDate = new Date(t.transactionAt);
+      return txDate >= start && txDate <= end;
+    })
+    .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
+}
+
 // ─── Skeleton cards ───────────────────────────────────────────────────────────
 
 function SkeletonHeroCard() {
@@ -90,11 +109,14 @@ export default function HomeScreen() {
   const expenseCategoriesQuery = useCategoriesQuery({ type: 'EXPENSE' });
   const plannedItemsQuery = usePlannedItemsQuery({ isActive: true });
   const transactionsQuery = useTransactionsQuery();
+  const budgetsQuery = useBudgetsQuery();
 
   const accounts = accountsQuery.data ?? [];
   const expenseCategories = expenseCategoriesQuery.data ?? [];
   const plannedItems = (plannedItemsQuery.data ?? []).slice(0, 5);
-  const recentTransactions = (transactionsQuery.data ?? []).slice(0, 5);
+  const allTransactions = transactionsQuery.data ?? [];
+  const recentTransactions = allTransactions.slice(0, 5);
+  const budgets = budgetsQuery.data ?? [];
   const incomePlannedItems = plannedItems.filter((item) => item.type === 'INCOME');
   const expensePlannedItems = plannedItems.filter((item) => item.type === 'EXPENSE');
   const totalBalance = accounts.reduce((sum, account) => sum + Number(account.balance), 0);
@@ -358,7 +380,7 @@ export default function HomeScreen() {
                     <Text className="text-xs font-semibold uppercase tracking-[2px] text-[#41d6b2]">
                       Income
                     </Text>
-                    <View className="mt-3 gap-3">
+                    <View className="mt-3 gap-2">
                       {incomePlannedItems.map((plannedItem) => {
                         const occurrenceDate =
                           plannedItem.nextOccurrenceAt ?? plannedItem.startDate;
@@ -366,28 +388,25 @@ export default function HomeScreen() {
                         return (
                           <View
                             key={plannedItem.id}
-                            className="flex-row items-center gap-3 rounded-[18px] bg-[#16211b] px-3 py-3">
-                            <View className="size-12 items-center justify-center rounded-[16px] bg-[#1f3325]">
-                              <TrendingUpIcon color="#41d6b2" size={18} />
+                            className="flex-row items-center gap-3 rounded-[14px] bg-[#16211b] px-3 py-2.5">
+                            <View className="size-9 items-center justify-center rounded-[12px] bg-[#1f3325]">
+                              <TrendingUpIcon color="#41d6b2" size={15} />
                             </View>
                             <View className="flex-1">
-                              <Text className="text-[17px] font-semibold text-[#f4f7f5]">
+                              <Text className="text-[15px] font-semibold text-[#f4f7f5]" numberOfLines={1}>
                                 {plannedItem.title}
                               </Text>
-                              <View className="mt-1 flex-row items-center gap-2">
-                                <Text className="text-sm text-[#7f8c86]">
+                              <View className="mt-0.5 flex-row items-center gap-1.5">
+                                <Text className="text-xs text-[#7f8c86]">
                                   {formatShortDate(occurrenceDate)}
                                 </Text>
-                                <Badge
-                                  label={plannedItem.recurrence.toLowerCase()}
-                                  variant="subtle"
-                                  size="sm"
-                                  className="bg-[#1a2c1f]"
-                                  textClassName="text-[#41d6b2] capitalize"
-                                />
+                                <Text className="text-[10px] text-[#4a5650]">·</Text>
+                                <Text className="text-xs capitalize text-[#41d6b2]">
+                                  {plannedItem.recurrence.toLowerCase()}
+                                </Text>
                               </View>
                             </View>
-                            <Text className="text-[17px] font-semibold text-[#41d6b2]">
+                            <Text className="text-[15px] font-semibold text-[#41d6b2]">
                               {formatCurrency(Number(plannedItem.amount), plannedItem.currency)}
                             </Text>
                           </View>
@@ -402,7 +421,7 @@ export default function HomeScreen() {
                     <Text className="text-xs font-semibold uppercase tracking-[2px] text-[#ff8a94]">
                       Expenses
                     </Text>
-                    <View className="mt-3 gap-3">
+                    <View className="mt-3 gap-2">
                       {expensePlannedItems.map((plannedItem) => {
                         const occurrenceDate =
                           plannedItem.nextOccurrenceAt ?? plannedItem.startDate;
@@ -412,40 +431,37 @@ export default function HomeScreen() {
                         return (
                           <View
                             key={plannedItem.id}
-                            className={`flex-row items-center gap-3 rounded-[18px] px-3 py-3 ${
+                            className={`flex-row items-center gap-3 rounded-[14px] px-3 py-2.5 ${
                               showUrgency ? 'bg-[#241719]' : 'bg-[#181516]'
                             }`}>
-                            <View className="size-12 items-center justify-center rounded-[16px] bg-[#331f25]">
-                              <TrendingDownIcon color="#ff8a94" size={18} />
+                            <View className="size-9 items-center justify-center rounded-[12px] bg-[#331f25]">
+                              <TrendingDownIcon color="#ff8a94" size={15} />
                             </View>
                             <View className="flex-1">
-                              <Text className="text-[17px] font-semibold text-[#f4f7f5]">
+                              <Text className="text-[15px] font-semibold text-[#f4f7f5]" numberOfLines={1}>
                                 {plannedItem.title}
                               </Text>
-                              <View className="mt-1 flex-row items-center gap-2">
-                                <Text className="text-sm text-[#7f8c86]">
+                              <View className="mt-0.5 flex-row items-center gap-1.5">
+                                <Text className="text-xs text-[#7f8c86]">
                                   {formatShortDate(occurrenceDate)}
                                 </Text>
-                                <Badge
-                                  label={plannedItem.recurrence.toLowerCase()}
-                                  variant="subtle"
-                                  size="sm"
-                                  className="bg-[#2c1a1f]"
-                                  textClassName="text-[#ff8a94] capitalize"
-                                />
+                                <Text className="text-[10px] text-[#4a5650]">·</Text>
+                                <Text className="text-xs capitalize text-[#ff8a94]">
+                                  {plannedItem.recurrence.toLowerCase()}
+                                </Text>
+                                {showUrgency ? (
+                                  <>
+                                    <Text className="text-[10px] text-[#4a5650]">·</Text>
+                                    <Text className="text-xs font-semibold text-[#ff8a94]">
+                                      {daysUntil === 0 ? 'Due today' : `${daysUntil}d left`}
+                                    </Text>
+                                  </>
+                                ) : null}
                               </View>
                             </View>
-                            <View className="items-end">
-                              {showUrgency ? (
-                                <Text className="text-[11px] font-semibold uppercase tracking-[1.6px] text-[#ff8a94]">
-                                  {daysUntil === 0 ? 'Due today' : `${daysUntil}d left`}
-                                </Text>
-                              ) : null}
-                              <Text
-                                className={`${showUrgency ? 'mt-1' : ''} text-[17px] font-semibold text-[#f4f7f5]`}>
-                                {formatCurrency(Number(plannedItem.amount), plannedItem.currency)}
-                              </Text>
-                            </View>
+                            <Text className="text-[15px] font-semibold text-[#f4f7f5]">
+                              {formatCurrency(Number(plannedItem.amount), plannedItem.currency)}
+                            </Text>
                           </View>
                         );
                       })}
@@ -467,13 +483,13 @@ export default function HomeScreen() {
             ) : null}
           </View>
 
-          {/* ─── Budgets teaser ────────────────────────────────────────────── */}
+          {/* ─── Budgets section ───────────────────────────────────────────── */}
           <View className="rounded-[30px] border border-[#17211c] bg-[#0f1512] p-5">
             <View className="flex-row items-start justify-between gap-4">
               <View className="flex-1">
                 <Text className="text-[28px] font-semibold text-[#f4f7f5]">Budgets</Text>
                 <Text className="mt-1 text-[15px] leading-6 text-[#7f8c86]">
-                  Set monthly limits by category so Penni can flag drift.
+                  Track spending limits and catch drift early.
                 </Text>
               </View>
               <View className="size-12 items-center justify-center rounded-full bg-[#18221d]">
@@ -481,42 +497,84 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            <View className="mt-5 flex-row items-center justify-between gap-3 rounded-[24px] bg-[#131b17] p-4">
-              <View className="flex-1">
-                <Text className="text-sm font-semibold text-[#f4f7f5]">Budget management</Text>
-                <Text className="mt-2 text-sm leading-6 text-[#7f8c86]">
-                  Create categories first, then this card evolves into real budget progress.
-                </Text>
+            {budgetsQuery.isLoading ? (
+              <View className="mt-5 rounded-[24px] bg-[#131b17] p-4">
+                <Text className="text-sm leading-6 text-[#7f8c86]">Loading budgets…</Text>
               </View>
-              <View className="items-end gap-2">
-                <Pill label="Soon" variant="subtle" />
+            ) : null}
+
+            {!budgetsQuery.isLoading && budgets.length > 0 ? (
+              <View className="mt-5 gap-3">
+                {budgets.slice(0, 3).map((budget) => {
+                  const spent = getSpentForBudget(budget, allTransactions);
+                  const limit = Number(budget.amount);
+                  const remaining = limit - spent;
+                  const pct = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
+                  const isOver = spent > limit;
+                  const isWarning = pct >= budget.alertThreshold;
+                  const barColor = isOver ? '#ff8a94' : isWarning ? '#ffc857' : '#8bff62';
+
+                  return (
+                    <Pressable
+                      key={budget.id}
+                      className="rounded-[24px] bg-[#131b17] p-4"
+                      onPress={() => router.push('/budgets')}>
+                      <View className="flex-row items-start justify-between gap-3">
+                        <View className="flex-1">
+                          <Text className="text-[15px] font-semibold text-[#f4f7f5]" numberOfLines={1}>
+                            {budget.name || 'Unnamed budget'}
+                          </Text>
+                          <Text className="mt-1 text-xs text-[#6d786f]">
+                            {formatCurrency(spent, budget.currency)} spent of {formatCurrency(limit, budget.currency)}
+                          </Text>
+                        </View>
+                        <View className="items-end">
+                          <Text className={`text-[15px] font-semibold ${remaining < 0 ? 'text-[#ff8a94]' : 'text-[#f4f7f5]'}`}>
+                            {formatCurrency(remaining, budget.currency)}
+                          </Text>
+                          <Text className="text-[11px] text-[#6d786f]">left</Text>
+                        </View>
+                      </View>
+                      <View className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#1a2c1f]">
+                        <View
+                          className="h-full rounded-full"
+                          style={{ width: `${pct}%`, backgroundColor: barColor }}
+                        />
+                      </View>
+                    </Pressable>
+                  );
+                })}
+
+                {budgets.length > 3 ? (
+                  <Button
+                    className="mt-2 h-11 self-start rounded-full bg-[#131b17] px-5"
+                    variant="ghost"
+                    size="sm"
+                    onPress={() => router.push('/budgets')}>
+                    <Text className="text-sm font-semibold text-[#dce2de]">View all budgets</Text>
+                    <Icon as={ArrowUpRightIcon} className="ml-1.5 size-4 text-[#8bff62]" />
+                  </Button>
+                ) : null}
+              </View>
+            ) : null}
+
+            {!budgetsQuery.isLoading && budgets.length === 0 ? (
+              <View className="mt-5 flex-row items-center justify-between gap-3 rounded-[24px] bg-[#131b17] p-4">
+                <View className="flex-1">
+                  <Text className="text-sm font-semibold text-[#f4f7f5]">No budgets yet</Text>
+                  <Text className="mt-1 text-[13px] leading-5 text-[#7f8c86]">
+                    Set monthly limits by category.
+                  </Text>
+                </View>
                 <Button
                   className="h-10 rounded-full bg-[#8bff62] px-4"
                   variant="ghost"
                   size="sm"
-                  onPress={() => router.push('/budgets')}>
-                  <Text className="text-sm font-semibold text-[#07110a]">Set budgets</Text>
+                  onPress={() => router.push('/budget-compose' as any)}>
+                  <Text className="text-sm font-semibold text-[#07110a]">Add</Text>
                 </Button>
               </View>
-            </View>
-          </View>
-
-          {/* ─── Insights teaser ───────────────────────────────────────────── */}
-          <View className="rounded-[30px] border border-[#203326] bg-[#101913] p-6">
-            <View className="flex-row items-start gap-4">
-              <View className="size-12 items-center justify-center rounded-full bg-[#1a2c1f]">
-                <Icon as={SparklesIcon} className="size-5 text-[#8bff62]" />
-              </View>
-              <View className="flex-1">
-                <Text className="text-[24px] font-semibold leading-8 text-[#f4f7f5]">
-                  Smart insights coming soon
-                </Text>
-                <Text className="mt-2 text-[15px] leading-6 text-[#95a39c]">
-                  Penni turns your spending into clean trends so you can catch category drift before
-                  it becomes a problem.
-                </Text>
-              </View>
-            </View>
+            ) : null}
           </View>
         </View>
       </ScrollView>

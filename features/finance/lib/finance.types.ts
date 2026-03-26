@@ -77,3 +77,20 @@ export type PlannedItem = {
   deletedAt: string | null;
   clientUpdatedAt: string | null;
 };
+
+export type Budget = {
+  id: string;
+  clientId: string | null;
+  userId: string;
+  categoryId: string | null;
+  name: string | null;
+  amount: string;
+  currency: string;
+  alertThreshold: number;
+  periodStart: string;
+  periodEnd: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  clientUpdatedAt: string | null;
+};

@@ -237,7 +237,7 @@ function AccountCard({
 
           {/* Balance — prominent right side */}
           <View className="items-end">
-            <Text className={`text-lg font-semibold ${meta.accentTextClassName}`}>
+            <Text className={`text-lg font-semibold ${Number(account.balance) < 0 ? 'text-[#ff8a94]' : meta.accentTextClassName}`}>
               {formatCurrency(Number(account.balance), account.currency)}
             </Text>
             {account.institutionName ? (
