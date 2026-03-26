@@ -138,7 +138,7 @@ High-level flow:
 
 Relevant files:
 
-- [app/_layout.tsx](/Users/jpatrickzxc/Documents/coding/Penni/penni-mobile/app/_layout.tsx)
+- [app/\_layout.tsx](/Users/jpatrickzxc/Documents/coding/Penni/penni-mobile/app/_layout.tsx)
 - [backend-user.tsx](/Users/jpatrickzxc/Documents/coding/Penni/penni-mobile/features/auth/lib/backend-user.tsx)
 - [backend-user.api.ts](/Users/jpatrickzxc/Documents/coding/Penni/penni-mobile/features/auth/lib/backend-user.api.ts)
 - [api.ts](/Users/jpatrickzxc/Documents/coding/Penni/penni-mobile/lib/api.ts)
@@ -150,16 +150,3 @@ Relevant files:
 - Shared form helpers live in [components/forms](/Users/jpatrickzxc/Documents/coding/Penni/penni-mobile/components/forms)
 - Shared sheet helpers live in [components/sheets](/Users/jpatrickzxc/Documents/coding/Penni/penni-mobile/components/sheets)
 - Low-level design system pieces live in [components/ui](/Users/jpatrickzxc/Documents/coding/Penni/penni-mobile/components/ui)
-
-## Notes
-
-- `.env` should not be tracked by git. If it shows up in git, it was previously added and needs to be removed from the index with `git rm --cached .env`.
-- Some screens currently use mock finance data from [mock-finance.ts](/Users/jpatrickzxc/Documents/coding/Penni/penni-mobile/features/finance/lib/mock-finance.ts) while backend-backed finance flows are still being built.
-
-## Verification
-
-To verify TypeScript after changes:
-
-```bash
-npx tsc --noEmit -p tsconfig.json
-```
