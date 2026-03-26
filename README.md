@@ -1,71 +1,165 @@
-# Clerk Auth Template
+# Penni Mobile
 
-This is a [React Native](https://reactnative.dev) project built with [Expo](https://expo.dev), [Clerk](https://go.clerk.com/gjgxNgT), and [React Native Reusables](https://reactnativereusables.com).
+Penni Mobile is the Expo + React Native client for Penni. It uses Clerk for authentication, Nativewind for styling, and Expo Router for navigation.
 
-It was initialized using the following command, then the `Clerk auth (Nativewind)` template was selected when prompted:
+## Stack
 
-```bash
-npx @react-native-reusables/cli@latest init
-```
+- Expo
+- React Native
+- Expo Router
+- Clerk
+- Nativewind
+- Axios
 
 ## Getting Started
 
-Before running the app, make sure to:
+1. Install dependencies:
 
-1. [Set up your Clerk account](https://go.clerk.com/blVsQlm)
-2. In the instance setup, leave the default option selected: **Email, phone, username**
-3. Enable Apple, GitHub, and Google as sign-in options under SSO Connections
-4. Rename `.env.example` to `.env.local` and paste your `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` from [your API keys](https://go.clerk.com/u8KAui7)
+```bash
+npm install
+```
 
-Then start the development server:
+2. Create a local env file:
+
+```bash
+cp .env.example .env
+```
+
+If `.env.example` does not exist yet, create `.env` manually.
+
+3. Add the required environment variables:
+
+```env
+EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+EXPO_PUBLIC_API_URL=http://localhost:3000/api
+```
+
+4. Start the Expo dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-This will launch the Expo Go Server. You can open the app with:
+## Device Notes
 
-- **iOS**: press `i` to launch in the iOS simulator (Mac only)
-- **Android**: press `a` to launch in the Android emulator
-- **Web**: press `w` to run in a browser
+If you are testing on a real phone, `localhost` will not reach your backend running on your laptop.
 
-Or scan the QR code with the [Expo Go](https://expo.dev/go) app to test on your device.
+Use either:
 
-## Included Screens and Features
+- your machine's LAN IP, for example `http://192.168.x.x:3000/api`
+- or a public tunnel URL for the backend
 
-- Protected routes using Clerk authentication
-- Sign in screen
-- OAuth with Apple, GitHub, and Google
-- Forgot password screen
-- Reset password screen
-- Verify email screen
-- User profile button
-- Sign out screen
+Expo `--tunnel` only exposes the Expo bundler. It does not expose the backend API by itself.
 
-## Project Features
+## Scripts
 
-- ⚛️ Built with [Expo Router](https://expo.dev/router)
-- 🔐 Authentication powered by [Clerk](https://go.clerk.com/Q1MKAz0)
-- 🎨 Styled with [Tailwind CSS](https://tailwindcss.com/) via [Nativewind](https://www.nativewind.dev/)
-- 📦 UI powered by [React Native Reusables](https://github.com/founded-labs/react-native-reusables)
-- 🚀 New Architecture enabled
-- 🔥 Edge to Edge enabled
-- 📱 Runs on iOS, Android, and Web
+```bash
+npm run dev
+npm run ios
+npm run android
+npm run web
+```
 
-## Learn More
+## Project Structure
 
-- [Clerk Docs](https://go.clerk.com/Q1MKAz0)
-- [React Native Docs](https://reactnative.dev/docs/getting-started)
-- [Expo Docs](https://docs.expo.dev/)
-- [Nativewind Docs](https://www.nativewind.dev/)
-- [React Native Reusables](https://reactnativereusables.com)
+The app uses Expo Router, but the route files are intentionally thin. `app/` is for routing, while the actual screen implementations live under `features/`.
 
----
+```text
+app/
+  (auth)/
+  (settings)/
+  (sheets)/
+  (tabs)/
+  _layout.tsx
 
-If this template helps you move faster, consider giving [React Native Reusables](https://github.com/founded-labs/react-native-reusables) a ⭐ on GitHub. It helps a lot!
+components/
+  auth/
+  forms/
+  navigation/
+  sheets/
+  ui/
+
+features/
+  auth/
+    lib/
+    screens/
+  dashboard/
+    screens/
+  finance/
+    lib/
+    screens/
+  planning/
+    screens/
+  settings/
+    screens/
+
+lib/
+  api.ts
+  env.ts
+  theme.ts
+  utils.ts
+```
+
+## Routing Pattern
+
+Route files inside `app/` should stay very small.
+
+Example:
+
+```tsx
+import AccountsScreen from '@/features/finance/screens/accounts-screen';
+
+export default function AccountsRoute() {
+  return <AccountsScreen />;
+}
+```
+
+This keeps routing concerns in `app/` and screen logic in `features/`.
+
+## Main Route Groups
+
+- `(auth)`: sign-in, sign-up, password reset, verification
+- `(tabs)`: main signed-in screens
+- `(sheets)`: modal / bottom-sheet style routes
+- `(settings)`: deeper account/settings detail screens
+
+Parentheses in Expo Router mean route groups. They organize the files without adding the group name to the route path.
+
+## Auth Flow
+
+Penni uses Clerk as the source of truth for auth.
+
+High-level flow:
+
+1. User signs in with Clerk
+2. Mobile app gets a Clerk session token
+3. Mobile app calls the backend `/api/me`
+4. Backend verifies the Clerk token and syncs/upserts the local user
+
+Relevant files:
+
+- [app/_layout.tsx](/Users/jpatrickzxc/Documents/coding/Penni/penni-mobile/app/_layout.tsx)
+- [backend-user.tsx](/Users/jpatrickzxc/Documents/coding/Penni/penni-mobile/features/auth/lib/backend-user.tsx)
+- [backend-user.api.ts](/Users/jpatrickzxc/Documents/coding/Penni/penni-mobile/features/auth/lib/backend-user.api.ts)
+- [api.ts](/Users/jpatrickzxc/Documents/coding/Penni/penni-mobile/lib/api.ts)
+
+## Current UI Organization
+
+- Reusable auth UI lives in [components/auth](/Users/jpatrickzxc/Documents/coding/Penni/penni-mobile/components/auth)
+- Shared navigation UI lives in [components/navigation](/Users/jpatrickzxc/Documents/coding/Penni/penni-mobile/components/navigation)
+- Shared form helpers live in [components/forms](/Users/jpatrickzxc/Documents/coding/Penni/penni-mobile/components/forms)
+- Shared sheet helpers live in [components/sheets](/Users/jpatrickzxc/Documents/coding/Penni/penni-mobile/components/sheets)
+- Low-level design system pieces live in [components/ui](/Users/jpatrickzxc/Documents/coding/Penni/penni-mobile/components/ui)
+
+## Notes
+
+- `.env` should not be tracked by git. If it shows up in git, it was previously added and needs to be removed from the index with `git rm --cached .env`.
+- Some screens currently use mock finance data from [mock-finance.ts](/Users/jpatrickzxc/Documents/coding/Penni/penni-mobile/features/finance/lib/mock-finance.ts) while backend-backed finance flows are still being built.
+
+## Verification
+
+To verify TypeScript after changes:
+
+```bash
+npx tsc --noEmit -p tsconfig.json
+```
