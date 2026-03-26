@@ -7,6 +7,8 @@ import { useAuth, useUser } from '@clerk/clerk-expo';
 import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
 import {
+  GoalIcon,
+  ShapesIcon,
   ChevronRightIcon,
   CreditCardIcon,
   LogOutIcon,
@@ -18,6 +20,8 @@ import { Pressable, ScrollView, View } from 'react-native';
 const SETTINGS_ITEMS = [
   { label: 'Personal details', icon: UserRoundIcon, href: '/personal-details' },
   { label: 'Connected accounts', icon: CreditCardIcon, href: '/connected-accounts' },
+  { label: 'Categories', icon: ShapesIcon, href: '/categories' },
+  { label: 'Budgets', icon: GoalIcon, href: '/budgets' },
   { label: 'Preferences', icon: Settings2Icon, href: '/preferences' },
 ] as const;
 

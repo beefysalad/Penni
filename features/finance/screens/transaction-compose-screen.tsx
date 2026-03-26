@@ -1,31 +1,113 @@
 import { SectionHeader } from '@/components/forms/section-header';
 import { SheetHeader } from '@/components/sheets/sheet-header';
 import { Button } from '@/components/ui/button';
+import { Badge, Pill } from '@/components/ui/pill';
 import { Text } from '@/components/ui/text';
-import { accountOptions, quickCategories } from '@/features/finance/lib/mock-finance';
+import { cn } from '@/lib/utils';
+import { useAccountsQuery } from '@/features/finance/hooks/use-accounts-query';
+import { useCategoriesQuery } from '@/features/finance/hooks/use-categories-query';
+import { useTransactionCompose } from '@/features/finance/lib/transaction-compose-context';
+import type { CategoryType } from '@/features/finance/lib/finance.types';
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { useFocusEffect } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
-import { ChevronDownIcon, Wallet2Icon } from 'lucide-react-native';
-import { useState } from 'react';
+import { CalendarIcon, ChevronDownIcon, Wallet2Icon } from 'lucide-react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 
 const MODES = ['Expense', 'Income'] as const;
 
-const ACCOUNT_META: Record<(typeof accountOptions)[number], { balance: string; tone: string }> = {
-  'BPI Savings': { balance: '₱22,450', tone: 'bg-[#163022]' },
-  GCash: { balance: '₱6,420', tone: 'bg-[#16262d]' },
-  Cash: { balance: '₱1,850', tone: 'bg-[#173223]' },
-  'BDO Visa': { balance: '₱33,700', tone: 'bg-[#2a1d32]' },
-};
+const ACCOUNT_TYPE_META = {
+  CASH: {
+    label: 'Cash',
+    iconWrapClassName: 'bg-[#173223]',
+    accentTextClassName: 'text-[#41d6b2]',
+  },
+  BANK_ACCOUNT: {
+    label: 'Debit',
+    iconWrapClassName: 'bg-[#163022]',
+    accentTextClassName: 'text-[#8bff62]',
+  },
+  E_WALLET: {
+    label: 'E-wallet',
+    iconWrapClassName: 'bg-[#16262d]',
+    accentTextClassName: 'text-[#5aa9ff]',
+  },
+  CREDIT_CARD: {
+    label: 'Credit',
+    iconWrapClassName: 'bg-[#2a1d32]',
+    accentTextClassName: 'text-[#ffc857]',
+  },
+  OTHER: {
+    label: 'Other',
+    iconWrapClassName: 'bg-[#202018]',
+    accentTextClassName: 'text-[#d8ff5b]',
+  },
+} as const;
 
 export default function TransactionComposeScreen() {
   const [mode, setMode] = useState<(typeof MODES)[number]>('Expense');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
-  const [selectedAccount, setSelectedAccount] =
-    useState<(typeof accountOptions)[number]>('GCash');
-  const [selectedCategory, setSelectedCategory] =
-    useState<(typeof quickCategories)[number]['label']>('Groceries');
+  const [transactionDate, setTransactionDate] = useState(() => new Date());
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const {
+    selectedAccountId,
+    setSelectedAccountId,
+    selectedCategoryId,
+    setSelectedCategoryId,
+  } = useTransactionCompose();
+  const formattedDateLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat('en-PH', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }).format(transactionDate),
+    [transactionDate],
+  );
+
+  const categoryType: CategoryType = mode === 'Expense' ? 'EXPENSE' : 'INCOME';
+  const accountsQuery = useAccountsQuery();
+  const categoriesQuery = useCategoriesQuery({ type: categoryType });
+
+  const accounts = accountsQuery.data ?? [];
+  const categories = categoriesQuery.data ?? [];
+
+  useEffect(() => {
+    if (!selectedAccountId && accounts.length > 0) {
+      setSelectedAccountId(accounts[0].id);
+    }
+  }, [accounts, selectedAccountId, setSelectedAccountId]);
+
+  useEffect(() => {
+    if (!selectedCategoryId || !categories.some((category) => category.id === selectedCategoryId)) {
+      setSelectedCategoryId(categories[0]?.id ?? null);
+    }
+  }, [categories, selectedCategoryId, setSelectedCategoryId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void accountsQuery.refetch();
+      void categoriesQuery.refetch();
+    }, [accountsQuery, categoriesQuery]),
+  );
+
+  const selectedAccount = accounts.find((account) => account.id === selectedAccountId) ?? null;
+  const quickCategories = useMemo(() => categories.slice(0, 4), [categories]);
+
+  const handleDateChange = (event: DateTimePickerEvent, nextDate?: Date) => {
+    if (Platform.OS !== 'ios') {
+      setIsDatePickerOpen(false);
+    }
+
+    if (event.type === 'dismissed' || !nextDate) {
+      return;
+    }
+
+    setTransactionDate(nextDate);
+  };
 
   return (
     <KeyboardAvoidingView
@@ -44,7 +126,7 @@ export default function TransactionComposeScreen() {
 
           <ScrollView
             className="mt-5"
-            contentContainerClassName="gap-5 px-5 pb-4"
+            contentContainerClassName="gap-4 px-5 pb-4"
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
             <View className="rounded-[28px] border border-[#17211c] bg-[#0f1512] p-3">
@@ -79,13 +161,8 @@ export default function TransactionComposeScreen() {
                     placeholder="0"
                     placeholderTextColor="#425248"
                     textAlign="center"
-                    textAlignVertical="center"
                     className="min-w-[180px] bg-transparent px-0 py-0 text-center text-[56px] font-semibold text-[#f4f7f5]"
-                    style={{
-                      height: 72,
-                      lineHeight: 56,
-                      includeFontPadding: false,
-                    }}
+                    style={{ height: 72, lineHeight: 56, includeFontPadding: false }}
                   />
                 </View>
 
@@ -104,79 +181,172 @@ export default function TransactionComposeScreen() {
               </View>
             </View>
 
-            <SectionHeader title="Account" actionLabel="Change" />
-            <View className="flex-row flex-wrap gap-3">
-              {accountOptions.map((account) => {
-                const isSelected = account === selectedAccount;
-                const meta = ACCOUNT_META[account];
-
-                return (
-                  <Pressable
-                    key={account}
-                    className={`min-w-[148px] flex-1 rounded-[24px] border p-4 ${
-                      isSelected
-                        ? 'border-[#52d776] bg-[#111c16]'
-                        : 'border-[#17211c] bg-[#0f1512]'
-                    }`}
-                    onPress={() => setSelectedAccount(account)}>
-                    <View className="flex-row items-start justify-between gap-3">
-                      <View className={`size-11 items-center justify-center rounded-2xl ${meta.tone}`}>
-                        <Wallet2Icon color={isSelected ? '#8bff62' : '#d9dfdb'} size={18} />
-                      </View>
-                      {isSelected ? (
-                        <View className="rounded-full bg-[#8bff62] px-2.5 py-1">
-                          <Text className="text-[10px] font-semibold uppercase tracking-[1.3px] text-[#07110a]">
-                            Selected
-                          </Text>
+            <SectionHeader title="Account" />
+            {accountsQuery.isLoading ? (
+              <Text className="text-sm text-[#7f8c86]">Loading accounts...</Text>
+            ) : null}
+            {accounts.length > 0 ? (
+              <View className="gap-2.5">
+                {selectedAccount ? (
+                  <View className="rounded-[22px] border border-[#52d776] bg-[#111c16] p-4">
+                    <View className="flex-row items-center justify-between gap-3">
+                      <View className="flex-row items-center gap-3">
+                        <View
+                          className={`size-11 items-center justify-center rounded-2xl ${ACCOUNT_TYPE_META[selectedAccount.type].iconWrapClassName}`}>
+                          <Wallet2Icon color="#8bff62" size={18} />
                         </View>
-                      ) : null}
+                        <View>
+                          <Text className="text-[17px] font-semibold text-[#f4f7f5]">
+                            {selectedAccount.name}
+                          </Text>
+                          <View className="mt-1 flex-row items-center gap-2">
+                            <Text
+                              className={`text-sm font-semibold ${ACCOUNT_TYPE_META[selectedAccount.type].accentTextClassName}`}>
+                              {ACCOUNT_TYPE_META[selectedAccount.type].label}
+                            </Text>
+                            <Text className="text-sm text-[#8d9a92]">
+                              {selectedAccount.currency} {selectedAccount.balance}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                      <View className="items-end gap-2">
+                        <Badge
+                          label="Selected"
+                          className="px-2.5 py-1"
+                          textClassName="text-[10px] uppercase tracking-[1.3px]"
+                        />
+                        <Pressable onPress={() => router.push('/account-picker')}>
+                          <Text className="text-sm font-semibold text-[#8bff62]">Change</Text>
+                        </Pressable>
+                      </View>
                     </View>
-                    <Text className="mt-4 text-[17px] font-semibold text-[#f4f7f5]">{account}</Text>
-                    <Text className="mt-1 text-sm text-[#8d9a92]">{meta.balance}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+                  </View>
+                ) : null}
 
-            <SectionHeader title="Category" actionLabel="Optional" />
-            <View className="flex-row flex-wrap gap-3">
+                <Pill
+                  label={`Browse all ${accounts.length} accounts`}
+                  variant="subtle"
+                  size="md"
+                  className="self-start"
+                  onPress={() => router.push('/account-picker')}
+                />
+              </View>
+            ) : (
+              <View className="rounded-[24px] border border-dashed border-[#26402f] bg-[#0f1512] p-4">
+                <Text className="text-sm leading-6 text-[#7f8c86]">
+                  Add at least one account first so this transaction has somewhere to be recorded.
+                </Text>
+                <Button
+                  className="mt-4 h-12 self-start rounded-full bg-[#8bff62] px-5"
+                  variant="ghost"
+                  size="sm"
+                  onPress={() => router.push('/account-compose')}>
+                  <Text className="text-sm font-semibold text-[#07110a]">Add account</Text>
+                </Button>
+              </View>
+            )}
+
+            <View className="flex-row items-center justify-between">
+              <Text className="text-[12px] font-semibold uppercase tracking-[2.6px] text-[#6f7d74]">
+                Category
+              </Text>
+              <Pill
+                label="Browse all"
+                variant="subtle"
+                size="md"
+                className="px-3 py-1.5"
+                onPress={() =>
+                  router.push({
+                    pathname: '/category-picker',
+                    params: { type: categoryType },
+                  })
+                }
+              />
+            </View>
+            {categoriesQuery.isLoading ? (
+              <Text className="text-sm text-[#7f8c86]">Loading categories...</Text>
+            ) : null}
+            <View className="flex-row flex-wrap gap-2.5">
               {quickCategories.map((category) => {
-                const isSelected = category.label === selectedCategory;
+                const isSelected = category.id === selectedCategoryId;
 
                 return (
-                  <Pressable
-                    key={category.label}
-                    className={`rounded-full border px-4 py-3 ${
+                  <Pill
+                    key={category.id}
+                    label={category.name}
+                    variant={isSelected ? 'selected' : 'default'}
+                    size="md"
+                    className={cn(
+                      'min-h-11 px-4',
                       isSelected
-                        ? 'border-[#8bff62] bg-[#1f3526]'
-                        : 'border-[#17211c] bg-[#0f1512]'
-                    }`}
-                    onPress={() => setSelectedCategory(category.label)}>
-                    <Text
-                      className={`text-sm font-semibold ${isSelected ? 'text-[#8bff62]' : 'text-[#dce2de]'}`}>
-                      {category.label}
-                    </Text>
-                  </Pressable>
+                        ? 'border-[#8bff62] bg-[#1a2b20] shadow-sm shadow-[#8bff62]/10'
+                        : 'bg-[#0f1512]',
+                    )}
+                    onPress={() => setSelectedCategoryId(category.id)}
+                    textStyle={{ color: isSelected ? '#8bff62' : category.colorHex ?? '#dce2de' }}
+                  />
                 );
               })}
             </View>
+            {categories.length > 4 ? (
+              <Pill
+                label={`Browse all ${categories.length} categories`}
+                variant="subtle"
+                size="md"
+                className="self-start"
+                onPress={() =>
+                  router.push({
+                    pathname: '/category-picker',
+                    params: { type: categoryType },
+                  })
+                }
+              />
+            ) : null}
 
-            <View className="rounded-[24px] border border-[#17211c] bg-[#0f1512] px-4 py-4">
+            <View className="rounded-[22px] border border-[#17211c] bg-[#0f1512] px-4 py-4">
               <View className="flex-row items-center justify-between">
                 <View>
                   <Text className="text-[12px] font-semibold uppercase tracking-[2px] text-[#6f7d74]">
                     Date
                   </Text>
-                  <Text className="mt-2 text-base font-semibold text-[#f4f7f5]">Today</Text>
+                  <Text className="mt-2 text-base font-semibold text-[#f4f7f5]">{formattedDateLabel}</Text>
                 </View>
-                <View className="flex-row items-center gap-2 rounded-full bg-[#131b17] px-3 py-2">
-                  <Text className="text-sm font-medium text-[#d7ddd9]">Now</Text>
+                <Pressable
+                  className="flex-row items-center gap-2 rounded-full bg-[#131b17] px-2.5 py-1"
+                  onPress={() => setIsDatePickerOpen((current) => !current)}>
+                  <CalendarIcon color="#d7ddd9" size={16} />
+                  <Text className="text-[12px] font-medium text-[#d7ddd9]">Change</Text>
                   <ChevronDownIcon color="#d7ddd9" size={16} />
-                </View>
+                </Pressable>
               </View>
+
+              {isDatePickerOpen ? (
+                <View className="mt-4 rounded-[20px] bg-[#131b17] p-3">
+                  <DateTimePicker
+                    value={transactionDate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={handleDateChange}
+                    maximumDate={new Date(2100, 11, 31)}
+                    themeVariant="dark"
+                    textColor="#f4f7f5"
+                  />
+                  {Platform.OS === 'ios' ? (
+                    <Pressable
+                      className="mt-3 self-end rounded-full bg-[#8bff62] px-4 py-2"
+                      onPress={() => setIsDatePickerOpen(false)}>
+                      <Text className="text-sm font-semibold text-[#07110a]">Done</Text>
+                    </Pressable>
+                  ) : null}
+                </View>
+              ) : null}
             </View>
 
-            <Button className="h-14 rounded-[22px] bg-[#8bff62]" onPress={() => router.back()}>
+            <Button
+              className="h-14 rounded-[22px] bg-[#8bff62]"
+              onPress={() => router.back()}
+              disabled={!selectedAccount || !selectedCategoryId}>
               <Text className="text-base font-semibold text-[#07110a]">
                 Save {mode.toLowerCase()}
               </Text>

@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
-import { transactionFeed } from '@/features/finance/lib/mock-finance';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { PlusIcon, SearchIcon, SlidersHorizontalIcon } from 'lucide-react-native';
@@ -14,10 +13,7 @@ export default function ActivityScreen() {
   return (
     <View className="flex-1 bg-[#060b08]">
       <StatusBar style="light" />
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="pb-32"
-        showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1" contentContainerClassName="pb-32" showsVerticalScrollIndicator={false}>
         <View className="rounded-b-[36px] bg-[#0b120e] px-6 pb-8 pt-safe pt-4">
           <AppPageHeader
             eyebrow="Transactions"
@@ -57,42 +53,14 @@ export default function ActivityScreen() {
             <View className="gap-3">
               <Text className="text-[28px] font-semibold text-[#f4f7f5]">Recent activity</Text>
               <Text className="text-[15px] leading-6 text-[#7f8c86]">
-                This screen is a better long-term home for history, filter, edit, and delete.
+                Transaction history will live here once the transaction API is wired.
               </Text>
-              <View className="self-start rounded-full bg-[#131b17] px-3 py-2">
-                <Text className="text-xs font-semibold uppercase tracking-[1.6px] text-[#8bff62]">
-                  18 this month
-                </Text>
-              </View>
             </View>
 
-            <View className="mt-5 gap-3">
-              {transactionFeed.map((transaction) => (
-                <View
-                  key={`${transaction.title}-${transaction.time}`}
-                  className={`flex-row items-center gap-4 rounded-[24px] px-4 py-4 ${transaction.toneClassName}`}>
-                  <View
-                    className={`size-12 items-center justify-center rounded-full ${transaction.iconClassName}`}>
-                    <Text className="text-base font-semibold text-[#f4f7f5]">
-                      {transaction.title[0]}
-                    </Text>
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-base font-semibold text-[#f4f7f5]">
-                      {transaction.title}
-                    </Text>
-                    <Text className="mt-1 text-sm text-[#7f8c86]">
-                      {transaction.account} • {transaction.category}
-                    </Text>
-                    <Text className="mt-2 text-[11px] font-semibold uppercase tracking-[1.6px] text-[#6d786f]">
-                      {transaction.time}
-                    </Text>
-                  </View>
-                  <Text className={`text-base font-semibold ${transaction.amountClassName}`}>
-                    {transaction.amount}
-                  </Text>
-                </View>
-              ))}
+            <View className="mt-5 rounded-[24px] bg-[#131b17] p-4">
+              <Text className="text-sm leading-6 text-[#7f8c86]">
+                No fake transaction feed anymore. Add a real transaction to start building this screen once the backend transaction endpoints are ready.
+              </Text>
             </View>
           </View>
         </View>

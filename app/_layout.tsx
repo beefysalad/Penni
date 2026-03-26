@@ -1,11 +1,14 @@
 import '@/global.css';
 
 import { BackendUserProvider, useBackendUser } from '@/features/auth/lib/backend-user';
+import { TransactionComposeProvider } from '@/features/finance/lib/transaction-compose-context';
 import { env } from '@/lib/env';
+import { queryClient } from '@/lib/query-client';
 import { NAV_THEME } from '@/lib/theme';
 import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import { ThemeProvider } from '@react-navigation/native';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { PortalHost } from '@rn-primitives/portal';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -24,11 +27,15 @@ export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={env.expoClerkPK} tokenCache={tokenCache}>
       <BackendUserProvider>
-        <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
-          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-          <Routes />
-          <PortalHost />
-        </ThemeProvider>
+        <TransactionComposeProvider>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
+              <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+              <Routes />
+              <PortalHost />
+            </ThemeProvider>
+          </QueryClientProvider>
+        </TransactionComposeProvider>
       </BackendUserProvider>
     </ClerkProvider>
   );
@@ -75,8 +82,13 @@ function Routes() {
         <Stack.Screen name="(settings)/personal-details" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(settings)/preferences" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(settings)/connected-accounts" options={DETAIL_SCREEN_OPTIONS} />
+        <Stack.Screen name="(settings)/categories" options={DETAIL_SCREEN_OPTIONS} />
+        <Stack.Screen name="(settings)/budgets" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(sheets)/transaction-compose" options={TRANSACTION_SHEET_OPTIONS} />
         <Stack.Screen name="(sheets)/account-compose" options={TRANSACTION_SHEET_OPTIONS} />
+        <Stack.Screen name="(sheets)/account-picker" options={TRANSACTION_SHEET_OPTIONS} />
+        <Stack.Screen name="(sheets)/category-compose" options={TRANSACTION_SHEET_OPTIONS} />
+        <Stack.Screen name="(sheets)/category-picker" options={TRANSACTION_SHEET_OPTIONS} />
         <Stack.Screen name="(sheets)/plan-ahead" options={TRANSACTION_SHEET_OPTIONS} />
       </Stack.Protected>
 
