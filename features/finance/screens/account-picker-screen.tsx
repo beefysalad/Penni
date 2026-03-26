@@ -1,12 +1,13 @@
 import { SheetHeader } from '@/components/sheets/sheet-header';
+import { SearchInput } from '@/components/ui/search-input';
 import { Text } from '@/components/ui/text';
 import { useAccountsQuery } from '@/features/finance/hooks/use-accounts-query';
 import { useTransactionCompose } from '@/features/finance/lib/transaction-compose-context';
 import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
-import { SearchIcon, Wallet2Icon } from 'lucide-react-native';
+import { Wallet2Icon } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 
 const ACCOUNT_TYPE_META = {
   CASH: {
@@ -74,19 +75,11 @@ export default function AccountPickerScreen() {
             contentContainerClassName="gap-5 px-5 pb-4"
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
-            <View className="flex-row items-center gap-3 rounded-[18px] bg-[#131b17] px-4 py-1">
-              <SearchIcon color="#8b9490" size={16} />
-              <TextInput
-                value={search}
-                onChangeText={setSearch}
-                placeholder="Search accounts"
-                placeholderTextColor="#6d786f"
-                autoCorrect={false}
-                spellCheck={false}
-                autoComplete="off"
-                className="h-12 flex-1 bg-transparent px-0 text-[16px] text-[#f4f7f5]"
-              />
-            </View>
+            <SearchInput
+              value={search}
+              onChangeText={setSearch}
+              placeholder="Search accounts"
+            />
 
             {accountsQuery.isLoading ? (
               <Text className="text-sm text-[#7f8c86]">Loading accounts...</Text>

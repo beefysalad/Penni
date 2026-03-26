@@ -6,7 +6,9 @@ import { Text } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 import { useAccountsQuery } from '@/features/finance/hooks/use-accounts-query';
 import { useCategoriesQuery } from '@/features/finance/hooks/use-categories-query';
+import { useCreateTransactionMutation } from '@/features/finance/hooks/use-transactions-query';
 import { useTransactionCompose } from '@/features/finance/lib/transaction-compose-context';
+import { createTransactionSchema } from '@/features/finance/lib/finance.schemas';
 import type { CategoryType } from '@/features/finance/lib/finance.types';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
@@ -57,7 +59,9 @@ export default function TransactionComposeScreen() {
     setSelectedAccountId,
     selectedCategoryId,
     setSelectedCategoryId,
+    resetCompose,
   } = useTransactionCompose();
+  const createTransactionMutation = useCreateTransactionMutation();
   const formattedDateLabel = useMemo(
     () =>
       new Intl.DateTimeFormat('en-PH', {
@@ -107,6 +111,42 @@ export default function TransactionComposeScreen() {
     }
 
     setTransactionDate(nextDate);
+  };
+
+  const canSave = Boolean(selectedAccountId && selectedCategoryId && amount.trim());
+
+  const handleSaveTransaction = async () => {
+    const parsed = createTransactionSchema.safeParse({
+      accountId: selectedAccountId ?? '',
+      categoryId: selectedCategoryId ?? '',
+      type: categoryType,
+      title: note.trim() || `${mode} entry`,
+      notes: note.trim() || undefined,
+      amount: amount.trim(),
+      currency: selectedAccount?.currency ?? 'PHP',
+      transactionAt: transactionDate.toISOString(),
+    });
+
+    if (!parsed.success) {
+      return;
+    }
+
+    await createTransactionMutation.mutateAsync({
+      accountId: parsed.data.accountId,
+      categoryId: parsed.data.categoryId,
+      type: parsed.data.type,
+      title: parsed.data.title,
+      notes: parsed.data.notes,
+      amount: parsed.data.amount,
+      currency: parsed.data.currency,
+      transactionAt: parsed.data.transactionAt,
+    });
+
+    setAmount('');
+    setNote('');
+    setTransactionDate(new Date());
+    resetCompose();
+    router.back();
   };
 
   return (
@@ -343,12 +383,22 @@ export default function TransactionComposeScreen() {
               ) : null}
             </View>
 
+            {createTransactionMutation.isError ? (
+              <Text className="text-sm text-[#ff8a94]">
+                {createTransactionMutation.error instanceof Error
+                  ? createTransactionMutation.error.message
+                  : 'Failed to save transaction.'}
+              </Text>
+            ) : null}
+
             <Button
               className="h-14 rounded-[22px] bg-[#8bff62]"
-              onPress={() => router.back()}
-              disabled={!selectedAccount || !selectedCategoryId}>
+              onPress={handleSaveTransaction}
+              disabled={!canSave || createTransactionMutation.isPending}>
               <Text className="text-base font-semibold text-[#07110a]">
-                Save {mode.toLowerCase()}
+                {createTransactionMutation.isPending
+                  ? `Saving ${mode.toLowerCase()}...`
+                  : `Save ${mode.toLowerCase()}`}
               </Text>
             </Button>
           </ScrollView>

@@ -2,6 +2,9 @@ import { Field } from '@/components/forms/field';
 import { SheetHeader } from '@/components/sheets/sheet-header';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { useCreatePlannedItemMutation } from '@/features/finance/hooks/use-planned-items-query';
+import { createPlannedItemSchema } from '@/features/finance/lib/finance.schemas';
+import type { CategoryType, RecurrenceFrequency } from '@/features/finance/lib/finance.types';
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
@@ -15,6 +18,7 @@ const ITEM_TYPES = ['Bill', 'Income'] as const;
 const RECURRING_OPTIONS = ['Weekly', 'Monthly', 'Quarterly'] as const;
 
 export default function PlanAheadScreen() {
+  const createPlannedItemMutation = useCreatePlannedItemMutation();
   const [itemType, setItemType] = useState<(typeof ITEM_TYPES)[number]>('Bill');
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
@@ -40,6 +44,32 @@ export default function PlanAheadScreen() {
     if (selectedDate) {
       setDueDate(selectedDate);
     }
+  }
+
+  async function handleSavePlannedItem() {
+    const type: CategoryType = itemType === 'Bill' ? 'EXPENSE' : 'INCOME';
+    const recurrenceMap: Record<(typeof RECURRING_OPTIONS)[number], RecurrenceFrequency> = {
+      Weekly: 'WEEKLY',
+      Monthly: 'MONTHLY',
+      Quarterly: 'QUARTERLY',
+    };
+
+    const parsed = createPlannedItemSchema.safeParse({
+      type,
+      title: title.trim(),
+      notes: notes.trim() || undefined,
+      amount: amount.trim(),
+      currency: 'PHP',
+      startDate: dueDate.toISOString(),
+      recurrence: recurrenceMap[recurringEvery],
+    });
+
+    if (!parsed.success) {
+      return;
+    }
+
+    await createPlannedItemMutation.mutateAsync(parsed.data);
+    router.back();
   }
 
   return (
@@ -218,8 +248,21 @@ export default function PlanAheadScreen() {
               </Text>
             </View>
 
-            <Button className="h-13 rounded-[20px] bg-[#8bff62]" onPress={() => router.back()}>
-              <Text className="text-sm font-semibold text-[#07110a]">Save recurring item</Text>
+            {createPlannedItemMutation.isError ? (
+              <Text className="text-sm text-[#ff8a94]">
+                {createPlannedItemMutation.error instanceof Error
+                  ? createPlannedItemMutation.error.message
+                  : 'Failed to save recurring item.'}
+              </Text>
+            ) : null}
+
+            <Button
+              className="h-13 rounded-[20px] bg-[#8bff62]"
+              onPress={handleSavePlannedItem}
+              disabled={createPlannedItemMutation.isPending}>
+              <Text className="text-sm font-semibold text-[#07110a]">
+                {createPlannedItemMutation.isPending ? 'Saving recurring item...' : 'Save recurring item'}
+              </Text>
             </Button>
           </ScrollView>
         </View>

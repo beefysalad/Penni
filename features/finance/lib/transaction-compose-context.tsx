@@ -5,6 +5,7 @@ type TransactionComposeContextValue = {
   setSelectedAccountId: (value: string | null) => void;
   selectedCategoryId: string | null;
   setSelectedCategoryId: (value: string | null) => void;
+  resetCompose: () => void;
 };
 
 const TransactionComposeContext = createContext<TransactionComposeContextValue | undefined>(
@@ -14,6 +15,10 @@ const TransactionComposeContext = createContext<TransactionComposeContextValue |
 export function TransactionComposeProvider({ children }: { children: ReactNode }) {
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const resetCompose = () => {
+    setSelectedAccountId(null);
+    setSelectedCategoryId(null);
+  };
 
   const value = useMemo(
     () => ({
@@ -21,6 +26,7 @@ export function TransactionComposeProvider({ children }: { children: ReactNode }
       setSelectedAccountId,
       selectedCategoryId,
       setSelectedCategoryId,
+      resetCompose,
     }),
     [selectedAccountId, selectedCategoryId],
   );
