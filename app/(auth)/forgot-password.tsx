@@ -1,16 +1,16 @@
-import { ForgotPasswordForm } from '@/components/forgot-password-form';
-import * as React from 'react';
-import { ScrollView, View } from 'react-native';
+import { AuthScreenShell } from '@/components/auth/auth-screen-shell';
+import { ForgotPasswordForm } from '@/components/auth/forgot-password-form';
+import { View } from 'react-native';
 
 export default function ForgotPasswordScreen() {
   return (
-    <ScrollView
-      keyboardShouldPersistTaps="handled"
-      contentContainerClassName="sm:flex-1 items-center justify-center p-4 py-8 sm:py-4 sm:p-6 mt-safe"
-      keyboardDismissMode="interactive">
-      <View className="w-full max-w-sm">
+    <AuthScreenShell
+      eyebrow="Recover access"
+      title="Reset your password"
+      subtitle="We’ll send a verification code so you can get back into your account quickly.">
+      <View className="w-full">
         <ForgotPasswordForm />
       </View>
-    </ScrollView>
+    </AuthScreenShell>
   );
 }

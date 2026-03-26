@@ -1,16 +1,16 @@
-import { SignInForm } from '@/components/sign-in-form';
-import * as React from 'react';
-import { ScrollView, View } from 'react-native';
+import { AuthScreenShell } from '@/components/auth/auth-screen-shell';
+import { SignInForm } from '@/components/auth/sign-in-form';
+import { View } from 'react-native';
 
 export default function SignInScreen() {
   return (
-    <ScrollView
-      keyboardShouldPersistTaps="handled"
-      contentContainerClassName="sm:flex-1 items-center justify-center p-4 py-8 sm:py-4 sm:p-6 mt-safe"
-      keyboardDismissMode="interactive">
-      <View className="w-full max-w-sm">
+    <AuthScreenShell
+      eyebrow="Penni"
+      title="Know where your money goes"
+      subtitle="Sign in to review balances, budgets, and upcoming bills in one calm place.">
+      <View className="w-full">
         <SignInForm />
       </View>
-    </ScrollView>
+    </AuthScreenShell>
   );
 }

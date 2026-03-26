@@ -1,5 +1,7 @@
 import '@/global.css';
 
+import { BackendUserProvider, useBackendUser } from '@/features/auth/lib/backend-user';
+import { env } from '@/lib/env';
 import { NAV_THEME } from '@/lib/theme';
 import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
@@ -9,7 +11,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
-import * as React from 'react';
+import { useEffect } from 'react';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -20,12 +22,14 @@ export default function RootLayout() {
   const { colorScheme } = useColorScheme();
 
   return (
-    <ClerkProvider tokenCache={tokenCache}>
-      <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
-        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-        <Routes />
-        <PortalHost />
-      </ThemeProvider>
+    <ClerkProvider publishableKey={env.expoClerkPK} tokenCache={tokenCache}>
+      <BackendUserProvider>
+        <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
+          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+          <Routes />
+          <PortalHost />
+        </ThemeProvider>
+      </BackendUserProvider>
     </ClerkProvider>
   );
 }
@@ -34,8 +38,9 @@ SplashScreen.preventAutoHideAsync();
 
 function Routes() {
   const { isSignedIn, isLoaded } = useAuth();
+  const { isSyncing } = useBackendUser();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isLoaded) {
       SplashScreen.hideAsync();
     }
@@ -45,23 +50,34 @@ function Routes() {
     return null;
   }
 
+  if (isSignedIn && isSyncing) {
+    return null;
+  }
+
   return (
     <Stack>
       {/* Screens only shown when the user is NOT signed in */}
       <Stack.Protected guard={!isSignedIn}>
         <Stack.Screen name="(auth)/sign-in" options={SIGN_IN_SCREEN_OPTIONS} />
         <Stack.Screen name="(auth)/sign-up" options={SIGN_UP_SCREEN_OPTIONS} />
+        <Stack.Screen name="(auth)/verify-sign-in" options={DEFAULT_AUTH_SCREEN_OPTIONS} />
         <Stack.Screen name="(auth)/reset-password" options={DEFAULT_AUTH_SCREEN_OPTIONS} />
         <Stack.Screen name="(auth)/forgot-password" options={DEFAULT_AUTH_SCREEN_OPTIONS} />
       </Stack.Protected>
 
       {/* Screens only shown when the user IS signed in */}
       <Stack.Protected guard={isSignedIn}>
-        <Stack.Screen name="index" options={APP_SCREEN_OPTIONS} />
-        <Stack.Screen name="accounts" options={APP_SCREEN_OPTIONS} />
-        <Stack.Screen name="add" options={APP_SCREEN_OPTIONS} />
-        <Stack.Screen name="stats" options={APP_SCREEN_OPTIONS} />
-        <Stack.Screen name="settings" options={APP_SCREEN_OPTIONS} />
+        <Stack.Screen name="(tabs)/index" options={APP_SCREEN_OPTIONS} />
+        <Stack.Screen name="(tabs)/accounts" options={APP_SCREEN_OPTIONS} />
+        <Stack.Screen name="(tabs)/add" options={APP_SCREEN_OPTIONS} />
+        <Stack.Screen name="(tabs)/stats" options={APP_SCREEN_OPTIONS} />
+        <Stack.Screen name="(tabs)/settings" options={APP_SCREEN_OPTIONS} />
+        <Stack.Screen name="(settings)/personal-details" options={DETAIL_SCREEN_OPTIONS} />
+        <Stack.Screen name="(settings)/preferences" options={DETAIL_SCREEN_OPTIONS} />
+        <Stack.Screen name="(settings)/connected-accounts" options={DETAIL_SCREEN_OPTIONS} />
+        <Stack.Screen name="(sheets)/transaction-compose" options={TRANSACTION_SHEET_OPTIONS} />
+        <Stack.Screen name="(sheets)/account-compose" options={TRANSACTION_SHEET_OPTIONS} />
+        <Stack.Screen name="(sheets)/plan-ahead" options={TRANSACTION_SHEET_OPTIONS} />
       </Stack.Protected>
 
       {/* Screens outside the guards are accessible to everyone (e.g. not found) */}
@@ -75,10 +91,7 @@ const SIGN_IN_SCREEN_OPTIONS = {
 };
 
 const SIGN_UP_SCREEN_OPTIONS = {
-  presentation: 'modal',
-  title: '',
-  headerTransparent: true,
-  gestureEnabled: false,
+  headerShown: false,
 } as const;
 
 const DEFAULT_AUTH_SCREEN_OPTIONS = {
@@ -89,4 +102,20 @@ const DEFAULT_AUTH_SCREEN_OPTIONS = {
 
 const APP_SCREEN_OPTIONS = {
   headerShown: false,
+  animation: 'none',
+} as const;
+
+const DETAIL_SCREEN_OPTIONS = {
+  title: '',
+  headerShown: false,
 };
+
+const TRANSACTION_SHEET_OPTIONS = {
+  presentation: 'transparentModal',
+  title: '',
+  headerShown: false,
+  animation: 'slide_from_bottom',
+  contentStyle: {
+    backgroundColor: 'transparent',
+  },
+} as const;
