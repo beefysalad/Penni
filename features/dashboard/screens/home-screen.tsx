@@ -46,7 +46,7 @@ export default function HomeScreen() {
       recentTransactions
         .filter((transaction) => transaction.type === 'INCOME')
         .reduce((sum, transaction) => sum + Number(transaction.amount), 0),
-    [recentTransactions],
+    [recentTransactions]
   );
 
   const recentExpense = useMemo(
@@ -54,13 +54,16 @@ export default function HomeScreen() {
       recentTransactions
         .filter((transaction) => transaction.type === 'EXPENSE')
         .reduce((sum, transaction) => sum + Number(transaction.amount), 0),
-    [recentTransactions],
+    [recentTransactions]
   );
 
   return (
     <View className="flex-1 bg-[#060b08]">
       <StatusBar style="light" />
-      <ScrollView className="flex-1" contentContainerClassName="pb-44" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="pb-44"
+        showsVerticalScrollIndicator={false}>
         <View className="pt-safe rounded-b-[36px] bg-[#0b120e] px-6 pb-6 pt-4">
           <AppPageHeader
             eyebrow="Penni overview"
@@ -81,7 +84,6 @@ export default function HomeScreen() {
                 topAccount ? formatCurrency(Number(topAccount.balance), topAccount.currency) : null
               }
               expenseCategoriesCount={expenseCategories.length}
-              onAddExpense={() => router.push('/transaction-compose?type=EXPENSE')}
               onAddIncome={() => router.push('/transaction-compose?type=INCOME')}
               onOpenAccounts={() => router.replace('/accounts')}
             />
@@ -101,6 +103,7 @@ export default function HomeScreen() {
             incomePlannedItems={incomePlannedItems}
             expensePlannedItems={expensePlannedItems}
             onPlanAhead={() => router.push('/plan-ahead')}
+            onOpenRecurring={() => router.push('/recurring')}
           />
 
           <BudgetsSection

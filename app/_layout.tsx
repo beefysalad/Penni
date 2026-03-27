@@ -84,6 +84,7 @@ function Routes() {
         <Stack.Screen name="(settings)/connected-accounts" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(settings)/categories" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(settings)/budgets" options={DETAIL_SCREEN_OPTIONS} />
+        <Stack.Screen name="(settings)/recurring" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(settings)/ai-chat" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(settings)/insights" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(sheets)/transaction-compose" options={TRANSACTION_SHEET_OPTIONS} />

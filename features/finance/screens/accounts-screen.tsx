@@ -11,14 +11,20 @@ import {
   AccountSkeletonCard,
   AccountSwipeableRow,
 } from '@/features/finance/components/accounts-sections';
-import { useAccountsQuery, useDeleteAccountMutation } from '@/features/finance/hooks/use-accounts-query';
-import { ACCOUNT_FILTERS, type AccountFilter, ACCOUNT_TYPE_META } from '@/features/finance/lib/constants';
+import {
+  useAccountsQuery,
+  useDeleteAccountMutation,
+} from '@/features/finance/hooks/use-accounts-query';
+import {
+  ACCOUNT_FILTERS,
+  type AccountFilter,
+  ACCOUNT_TYPE_META,
+} from '@/features/finance/lib/constants';
 import { formatCurrency } from '@/features/finance/lib/formatters';
 import { getNetWorth, getTypeBreakdown } from '@/features/finance/lib/selectors';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import {
-  ArrowDownLeftIcon,
   ArrowUpRightIcon,
   BanknoteIcon,
   CalendarClockIcon,
@@ -29,8 +35,6 @@ import {
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-
-// ─── Main screen ──────────────────────────────────────────────────────────────
 
 export default function AccountsScreen() {
   const accountsQuery = useAccountsQuery();
@@ -59,14 +63,14 @@ export default function AccountsScreen() {
 
   const visibleAccounts = showAllAccounts ? filteredAccounts : filteredAccounts.slice(0, 8);
 
-
-
   return (
     <GestureHandlerRootView className="flex-1 bg-[#060b08]">
       <StatusBar style="light" />
-      <ScrollView className="flex-1" contentContainerClassName="pb-44" showsVerticalScrollIndicator={false}>
-        {/* ─── Header ─────────────────────────────────────────────────────── */}
-        <View className="rounded-b-[36px] bg-[#0b120e] px-6 pb-8 pt-safe pt-4">
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="pb-44"
+        showsVerticalScrollIndicator={false}>
+        <View className="pt-safe rounded-b-[36px] bg-[#0b120e] px-6 pb-8 pt-4">
           <AppPageHeader
             eyebrow="Wallets and balances"
             title="See all your money in one place"
@@ -76,7 +80,6 @@ export default function AccountsScreen() {
         </View>
 
         <View className="gap-5 px-6 pt-6">
-          {/* ─── Net-worth hero card ───────────────────────────────────────── */}
           <View className="rounded-[30px] border border-[#1b2a21] bg-[#111916] p-5">
             <View className="flex-row items-start justify-between gap-4">
               <View className="flex-1">
@@ -95,7 +98,6 @@ export default function AccountsScreen() {
               </View>
             </View>
 
-            {/* Type breakdown pills */}
             {typeBreakdown.length > 0 ? (
               <ScrollView
                 horizontal
@@ -114,7 +116,8 @@ export default function AccountsScreen() {
                       <Text className={`text-xs font-semibold ${meta.accentTextClassName}`}>
                         {meta.label}
                       </Text>
-                      <Text className={`text-xs ${isNegativeBreakdown ? 'text-[#ff8a94]' : 'text-[#7f8c86]'}`}>
+                      <Text
+                        className={`text-xs ${isNegativeBreakdown ? 'text-[#ff8a94]' : 'text-[#7f8c86]'}`}>
                         {formatCurrency(balance)}
                       </Text>
                     </View>
@@ -123,22 +126,15 @@ export default function AccountsScreen() {
               </ScrollView>
             ) : null}
 
-            {/* Quick actions */}
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerClassName="gap-2 pt-4">
               <Pressable
-                className="flex-row items-center gap-1.5 rounded-full bg-[#1d1518] px-3.5 py-2"
-                onPress={() => router.push('/transaction-compose?type=EXPENSE')}>
-                <ArrowDownLeftIcon color="#ff8a94" size={13} />
-                <Text className="text-xs font-semibold text-[#ff8a94]">Add expense</Text>
-              </Pressable>
-              <Pressable
                 className="flex-row items-center gap-1.5 rounded-full bg-[#16211b] px-3.5 py-2"
                 onPress={() => router.push('/transaction-compose?type=INCOME')}>
                 <ArrowUpRightIcon color="#41d6b2" size={13} />
-                <Text className="text-xs font-semibold text-[#41d6b2]">Add income</Text>
+                <Text className="text-xs font-semibold text-[#41d6b2]">Add Transaction</Text>
               </Pressable>
               <Pressable
                 className="flex-row items-center gap-1.5 rounded-full bg-[#18221d] px-3.5 py-2"
@@ -149,7 +145,6 @@ export default function AccountsScreen() {
             </ScrollView>
           </View>
 
-          {/* ─── Accounts section ──────────────────────────────────────────── */}
           <View className="rounded-[30px] border border-[#17211c] bg-[#0f1512] p-5">
             <View className="gap-4">
               <View className="flex-row items-start justify-between gap-4">
@@ -161,7 +156,6 @@ export default function AccountsScreen() {
                 </View>
               </View>
 
-              {/* Actions */}
               <View className="flex-row gap-3">
                 <Button
                   className="h-12 flex-1 rounded-full bg-[#8bff62] px-5"
@@ -182,7 +176,6 @@ export default function AccountsScreen() {
               </View>
             </View>
 
-            {/* ─── Horizontal filter pills ──────────────────────────────────── */}
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -202,7 +195,6 @@ export default function AccountsScreen() {
               })}
             </ScrollView>
 
-            {/* ─── Search ───────────────────────────────────────────────────── */}
             <SearchInput
               value={search}
               onChangeText={setSearch}
@@ -210,7 +202,6 @@ export default function AccountsScreen() {
               className="mt-4"
             />
 
-            {/* ─── Account list ─────────────────────────────────────────────── */}
             <View className="mt-4 gap-5">
               {accountsQuery.isLoading ? (
                 <>

@@ -45,3 +45,14 @@ export async function createPlannedItem(token: string, input: CreatePlannedItemI
 
   return response.data;
 }
+
+export async function deletePlannedItem(token: string, id: string) {
+  const response = await api.delete<{ id: string }>(`/planned-items/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/json',
+    },
+  });
+
+  return response.data;
+}

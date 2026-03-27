@@ -28,6 +28,14 @@ export const ACCOUNT_ITEMS = [
 
 export const FINANCE_ITEMS = [
   {
+    label: 'Recurring items',
+    description: 'Upcoming scheduled bills and income',
+    icon: ShapesIcon, // Just reusing shapes or getting another icon
+    iconBg: 'bg-[#1e2a22]',
+    iconColor: '#8bff62',
+    href: '/recurring' as const,
+  },
+  {
     label: 'Categories',
     description: 'Organize spending and income',
     icon: ShapesIcon,

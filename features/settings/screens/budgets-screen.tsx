@@ -1,4 +1,5 @@
 import { AppPageHeader } from '@/components/navigation/app-page-header';
+import { AppTabBar } from '@/components/navigation/app-tab-bar';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
@@ -41,15 +42,6 @@ export default function BudgetsScreen() {
       <StatusBar style="light" />
       <ScrollView className="flex-1" contentContainerClassName="pb-12" showsVerticalScrollIndicator={false}>
         <View className="rounded-b-[36px] bg-[#0b120e] px-6 pb-8 pt-safe pt-4">
-          <View className="mb-4">
-            <Button
-              variant="ghost"
-              className="h-11 self-start rounded-full bg-[#111916] px-4"
-              onPress={() => router.back()}>
-              <Text className="text-sm font-semibold text-[#f4f7f5]">Back</Text>
-            </Button>
-          </View>
-
           <AppPageHeader
             eyebrow="Budget planning"
             title="Budgets"
@@ -59,6 +51,15 @@ export default function BudgetsScreen() {
         </View>
 
         <View className="gap-5 px-6 pt-6">
+          <Button
+            className="h-12 self-start rounded-full bg-[#8bff62] px-5"
+            variant="ghost"
+            size="sm"
+            onPress={() => router.push('/budget-compose' as any)}>
+            <Icon as={PlusIcon} className="mr-2 size-4 text-[#07110a]" />
+            <Text className="text-sm font-semibold text-[#07110a]">Add budget</Text>
+          </Button>
+
           {/* ─── Active budgets ─────────────────────────────────────────────── */}
           {budgets.length > 0 ? (
             <View className="rounded-[28px] border border-[#17211c] bg-[#0f1512] p-5">
@@ -93,16 +94,10 @@ export default function BudgetsScreen() {
               </Text>
             </View>
           )}
-
-          {/* ─── Add budget button ─────────────────────────────────────────── */}
-          <Button
-            className="h-14 rounded-[22px] bg-[#ffc857]"
-            onPress={() => router.push('/budget-compose' as any)}>
-            <Icon as={PlusIcon} className="mr-2 size-5 text-[#07110a]" />
-            <Text className="text-base font-semibold text-[#07110a]">Add budget</Text>
-          </Button>
         </View>
       </ScrollView>
+
+      <AppTabBar currentTab="profile" />
     </View>
   );
 }
