@@ -1,4 +1,5 @@
 import { Field } from '@/components/forms/field';
+import { CENTERED_INPUT_STYLE } from '@/components/forms/input-styles';
 import { SectionHeader } from '@/components/forms/section-header';
 import { SheetHeader } from '@/components/sheets/sheet-header';
 import { Button } from '@/components/ui/button';
@@ -104,6 +105,7 @@ export default function CategoryComposeScreen() {
                           spellCheck={false}
                           autoComplete="off"
                           className="h-12 bg-transparent px-0 text-[17px] text-[#f4f7f5]"
+                          style={CENTERED_INPUT_STYLE}
                         />
                       )}
                     />

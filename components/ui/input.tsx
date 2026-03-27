@@ -1,9 +1,11 @@
 import { cn } from '@/lib/utils';
+import { CENTERED_INPUT_STYLE } from '@/components/forms/input-styles';
 import { Platform, TextInput, type TextInputProps } from 'react-native';
 
 function Input({
   className,
   placeholderClassName,
+  style,
   ...props
 }: TextInputProps & React.RefAttributes<TextInput>) {
   return (
@@ -26,6 +28,10 @@ function Input({
         }),
         className
       )}
+      style={[
+        Platform.OS !== 'web' && !props.multiline ? CENTERED_INPUT_STYLE : null,
+        style,
+      ]}
       textAlignVertical={props.multiline ? 'top' : props.textAlignVertical}
       {...props}
     />

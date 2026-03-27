@@ -1,4 +1,8 @@
 import { Field } from '@/components/forms/field';
+import {
+  CENTERED_INPUT_STYLE,
+  NUMERIC_INPUT_STYLE,
+} from '@/components/forms/input-styles';
 import { SheetHeader } from '@/components/sheets/sheet-header';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -131,6 +135,7 @@ export default function PlanAheadScreen() {
                     spellCheck={false}
                     autoComplete="off"
                     className="h-12 rounded-[18px] bg-[#141d18] px-4 text-[16px] text-[#f4f7f5]"
+                    style={CENTERED_INPUT_STYLE}
                   />
                 </Field>
 
@@ -147,6 +152,7 @@ export default function PlanAheadScreen() {
                       spellCheck={false}
                       autoComplete="off"
                       className="h-12 flex-1 bg-transparent px-0 text-[20px] font-semibold text-[#f4f7f5]"
+                      style={NUMERIC_INPUT_STYLE}
                     />
                   </View>
                 </Field>

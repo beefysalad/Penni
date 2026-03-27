@@ -1,4 +1,8 @@
 import { SectionHeader } from '@/components/forms/section-header';
+import {
+  CENTERED_INPUT_STYLE,
+  LARGE_NUMERIC_INPUT_STYLE,
+} from '@/components/forms/input-styles';
 import { SheetHeader } from '@/components/sheets/sheet-header';
 import { Button } from '@/components/ui/button';
 import { Badge, Pill } from '@/components/ui/pill';
@@ -173,7 +177,7 @@ export default function TransactionComposeScreen() {
                     placeholderTextColor="#425248"
                     textAlign="center"
                     className="min-w-[180px] bg-transparent px-0 py-0 text-center text-[56px] font-semibold text-[#f4f7f5]"
-                    style={{ height: 72, lineHeight: 56, includeFontPadding: false }}
+                    style={LARGE_NUMERIC_INPUT_STYLE}
                   />
                 </View>
 
@@ -187,6 +191,7 @@ export default function TransactionComposeScreen() {
                     spellCheck={false}
                     autoComplete="off"
                     className="h-12 bg-transparent px-0 text-[16px] text-[#f4f7f5]"
+                    style={CENTERED_INPUT_STYLE}
                   />
                 </View>
               </View>

@@ -1,4 +1,8 @@
 import { Field } from '@/components/forms/field';
+import {
+  CENTERED_INPUT_STYLE,
+  NUMERIC_INPUT_STYLE,
+} from '@/components/forms/input-styles';
 import { SectionHeader } from '@/components/forms/section-header';
 import { SheetHeader } from '@/components/sheets/sheet-header';
 import { Button } from '@/components/ui/button';
@@ -118,12 +122,7 @@ export default function BudgetComposeScreen() {
                           spellCheck={false}
                           autoComplete="off"
                           className="h-12 bg-transparent px-0 text-[17px] text-[#f4f7f5]"
-                          style={{
-                            lineHeight: 20,
-                            paddingVertical: 0,
-                            textAlignVertical: 'center',
-                            includeFontPadding: false,
-                          }}
+                          style={CENTERED_INPUT_STYLE}
                         />
                       )}
                     />
@@ -147,12 +146,7 @@ export default function BudgetComposeScreen() {
                           spellCheck={false}
                           autoComplete="off"
                           className="h-12 flex-1 bg-transparent px-0 text-[22px] font-semibold text-[#f4f7f5]"
-                          style={{
-                            lineHeight: 24,
-                            paddingVertical: 0,
-                            textAlignVertical: 'center',
-                            includeFontPadding: false,
-                          }}
+                          style={NUMERIC_INPUT_STYLE}
                         />
                       )}
                     />
