@@ -7,6 +7,18 @@ export type ListTransactionsParams = {
   categoryId?: string;
   from?: string;
   to?: string;
+  cursor?: string;
+  limit?: number;
+};
+
+export type PaginatedTransactionsResponse = {
+  data: Transaction[];
+  nextCursor: string | null;
+  hasMore: boolean;
+  summary: {
+    totalIncome: string;
+    totalExpense: string;
+  };
 };
 
 export type CreateTransactionInput = {
@@ -22,8 +34,11 @@ export type CreateTransactionInput = {
   transactionAt: string;
 };
 
-export async function listTransactions(token: string, params?: ListTransactionsParams) {
-  const response = await api.get<Transaction[]>('/transactions', {
+export async function listTransactions(
+  token: string,
+  params?: ListTransactionsParams,
+): Promise<PaginatedTransactionsResponse> {
+  const response = await api.get<PaginatedTransactionsResponse>('/transactions', {
     params,
     headers: {
       Authorization: `Bearer ${token}`,

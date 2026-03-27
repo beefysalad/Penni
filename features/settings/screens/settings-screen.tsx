@@ -1,121 +1,19 @@
 import { AppPageHeader } from '@/components/navigation/app-page-header';
 import { AppTabBar } from '@/components/navigation/app-tab-bar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
+import { SettingsRow } from '@/features/settings/components/settings-row';
+import { ACCOUNT_ITEMS, APP_ITEMS, FINANCE_ITEMS } from '@/features/settings/lib/constants';
+import { formatMemberSince } from '@/features/settings/lib/formatters';
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
 import {
-  BotIcon,
-  ChevronRightIcon,
-  CreditCardIcon,
-  GoalIcon,
   LogOutIcon,
   PenLineIcon,
-  Settings2Icon,
-  ShapesIcon,
   ShieldCheckIcon,
-  UserRoundIcon,
 } from 'lucide-react-native';
 import { Pressable, ScrollView, View } from 'react-native';
-
-// ─── Settings items ───────────────────────────────────────────────────────────
-
-const ACCOUNT_ITEMS = [
-  {
-    label: 'Personal details',
-    description: 'Name, email, and identity',
-    icon: UserRoundIcon,
-    iconBg: 'bg-[#1a2c1f]',
-    iconColor: '#8bff62',
-    href: '/personal-details' as const,
-  },
-  {
-    label: 'Connected accounts',
-    description: 'Linked banks and wallets',
-    icon: CreditCardIcon,
-    iconBg: 'bg-[#1a262d]',
-    iconColor: '#5aa9ff',
-    href: '/connected-accounts' as const,
-  },
-];
-
-const FINANCE_ITEMS = [
-  {
-    label: 'Categories',
-    description: 'Organize spending and income',
-    icon: ShapesIcon,
-    iconBg: 'bg-[#231b33]',
-    iconColor: '#c89dff',
-    href: '/categories' as const,
-  },
-  {
-    label: 'Budgets',
-    description: 'Set monthly limits by category',
-    icon: GoalIcon,
-    iconBg: 'bg-[#2a2518]',
-    iconColor: '#ffc857',
-    href: '/budgets' as const,
-  },
-];
-
-const APP_ITEMS = [
-  {
-    label: 'AI Chat',
-    description: 'Natural-language command assistant',
-    icon: BotIcon,
-    iconBg: 'bg-[#16231b]',
-    iconColor: '#8bff62',
-    href: '/ai-chat' as const,
-  },
-  {
-    label: 'Preferences',
-    description: 'Currency, appearance, and defaults',
-    icon: Settings2Icon,
-    iconBg: 'bg-[#18221d]',
-    iconColor: '#41d6b2',
-    href: '/preferences' as const,
-  },
-];
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatMemberSince(dateStr?: string | null) {
-  if (!dateStr) return null;
-  return new Intl.DateTimeFormat('en-PH', {
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date(dateStr));
-}
-
-// ─── Settings row ─────────────────────────────────────────────────────────────
-
-type SettingsItem = {
-  label: string;
-  description: string;
-  icon: typeof UserRoundIcon;
-  iconBg: string;
-  iconColor: string;
-  href: string;
-};
-
-function SettingsRow({ item }: { item: SettingsItem }) {
-  return (
-    <Pressable
-      className="flex-row items-center gap-3 rounded-[20px] bg-[#131b17] px-4 py-3.5"
-      onPress={() => router.push(item.href as any)}>
-      <View className={`size-10 items-center justify-center rounded-[14px] ${item.iconBg}`}>
-        <item.icon color={item.iconColor} size={18} />
-      </View>
-      <View className="flex-1">
-        <Text className="text-[15px] font-semibold text-[#f4f7f5]">{item.label}</Text>
-        <Text className="mt-0.5 text-xs text-[#6d786f]">{item.description}</Text>
-      </View>
-      <ChevronRightIcon color="#4a5650" size={18} />
-    </Pressable>
-  );
-}
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
@@ -233,7 +131,6 @@ export default function SettingsScreen() {
           {/* ─── Footer ────────────────────────────────────────────────────── */}
           <View className="items-center py-4">
             <Text className="text-xs text-[#4a5650]">Penni v1.0.0</Text>
-
           </View>
         </View>
       </ScrollView>

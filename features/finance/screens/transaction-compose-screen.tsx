@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { useAccountsQuery } from '@/features/finance/hooks/use-accounts-query';
 import { useCategoriesQuery } from '@/features/finance/hooks/use-categories-query';
 import { useCreateTransactionMutation } from '@/features/finance/hooks/use-transactions-query';
+import { ACCOUNT_TYPE_META, TRANSACTION_MODES } from '@/features/finance/lib/constants';
 import { useTransactionCompose } from '@/features/finance/lib/transaction-compose-context';
 import { createTransactionSchema } from '@/features/finance/lib/finance.schemas';
 import type { CategoryType } from '@/features/finance/lib/finance.types';
@@ -18,38 +19,8 @@ import { CalendarIcon, ChevronDownIcon, Wallet2Icon } from 'lucide-react-native'
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 
-const MODES = ['Expense', 'Income'] as const;
-
-const ACCOUNT_TYPE_META = {
-  CASH: {
-    label: 'Cash',
-    iconWrapClassName: 'bg-[#173223]',
-    accentTextClassName: 'text-[#41d6b2]',
-  },
-  BANK_ACCOUNT: {
-    label: 'Debit',
-    iconWrapClassName: 'bg-[#163022]',
-    accentTextClassName: 'text-[#8bff62]',
-  },
-  E_WALLET: {
-    label: 'E-wallet',
-    iconWrapClassName: 'bg-[#16262d]',
-    accentTextClassName: 'text-[#5aa9ff]',
-  },
-  CREDIT_CARD: {
-    label: 'Credit',
-    iconWrapClassName: 'bg-[#2a1d32]',
-    accentTextClassName: 'text-[#ffc857]',
-  },
-  OTHER: {
-    label: 'Other',
-    iconWrapClassName: 'bg-[#202018]',
-    accentTextClassName: 'text-[#d8ff5b]',
-  },
-} as const;
-
 export default function TransactionComposeScreen() {
-  const [mode, setMode] = useState<(typeof MODES)[number]>('Expense');
+  const [mode, setMode] = useState<(typeof TRANSACTION_MODES)[number]>('Expense');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
   const [transactionDate, setTransactionDate] = useState(() => new Date());
@@ -171,7 +142,7 @@ export default function TransactionComposeScreen() {
             showsVerticalScrollIndicator={false}>
             <View className="rounded-[28px] border border-[#17211c] bg-[#0f1512] p-3">
               <View className="flex-row gap-2 rounded-[20px] bg-[#0a100d] p-1.5">
-                {MODES.map((item) => {
+                {TRANSACTION_MODES.map((item) => {
                   const isSelected = item === mode;
 
                   return (

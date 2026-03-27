@@ -1,27 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { CONNECTIONS } from '@/features/settings/lib/constants';
 import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
 import { CreditCardIcon, LandmarkIcon, ShieldCheckIcon } from 'lucide-react-native';
 import { ScrollView, View } from 'react-native';
-
-const CONNECTIONS = [
-  {
-    title: 'Bank accounts',
-    description: 'Link checking and savings accounts once you are ready for live balance sync.',
-    icon: LandmarkIcon,
-  },
-  {
-    title: 'Cards and wallets',
-    description: 'Keep credit cards and digital wallets in one place for a fuller money picture.',
-    icon: CreditCardIcon,
-  },
-  {
-    title: 'Secure connection flow',
-    description: 'When this is wired up for real, connections should happen through a secure provider.',
-    icon: ShieldCheckIcon,
-  },
-] as const;
 
 export default function ConnectedAccountsScreen() {
   return (
@@ -48,7 +31,13 @@ export default function ConnectedAccountsScreen() {
               key={item.title}
               className="rounded-[24px] border border-[#17211c] bg-[#0f1512] p-5">
               <View className="size-12 items-center justify-center rounded-full bg-[#1a2c1f]">
-                <item.icon color="#8bff62" size={20} />
+                {item.iconName === 'landmark' ? (
+                  <LandmarkIcon color="#8bff62" size={20} />
+                ) : item.iconName === 'credit-card' ? (
+                  <CreditCardIcon color="#8bff62" size={20} />
+                ) : (
+                  <ShieldCheckIcon color="#8bff62" size={20} />
+                )}
               </View>
               <Text className="mt-4 text-lg font-semibold text-[#f4f7f5]">{item.title}</Text>
               <Text className="mt-2 text-sm leading-6 text-[#7f8c86]">{item.description}</Text>

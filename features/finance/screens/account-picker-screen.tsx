@@ -2,40 +2,13 @@ import { SheetHeader } from '@/components/sheets/sheet-header';
 import { SearchInput } from '@/components/ui/search-input';
 import { Text } from '@/components/ui/text';
 import { useAccountsQuery } from '@/features/finance/hooks/use-accounts-query';
+import { ACCOUNT_TYPE_META } from '@/features/finance/lib/constants';
 import { useTransactionCompose } from '@/features/finance/lib/transaction-compose-context';
 import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
 import { Wallet2Icon } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
-
-const ACCOUNT_TYPE_META = {
-  CASH: {
-    label: 'Cash',
-    iconWrapClassName: 'bg-[#173223]',
-    accentTextClassName: 'text-[#41d6b2]',
-  },
-  BANK_ACCOUNT: {
-    label: 'Debit',
-    iconWrapClassName: 'bg-[#163022]',
-    accentTextClassName: 'text-[#8bff62]',
-  },
-  E_WALLET: {
-    label: 'E-wallet',
-    iconWrapClassName: 'bg-[#16262d]',
-    accentTextClassName: 'text-[#5aa9ff]',
-  },
-  CREDIT_CARD: {
-    label: 'Credit',
-    iconWrapClassName: 'bg-[#2a1d32]',
-    accentTextClassName: 'text-[#ffc857]',
-  },
-  OTHER: {
-    label: 'Other',
-    iconWrapClassName: 'bg-[#202018]',
-    accentTextClassName: 'text-[#d8ff5b]',
-  },
-} as const;
 
 export default function AccountPickerScreen() {
   const accountsQuery = useAccountsQuery();

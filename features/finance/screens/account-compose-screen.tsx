@@ -8,6 +8,10 @@ import {
   type CreateAccountFormValues,
 } from '@/features/finance/lib/finance.schemas';
 import { useCreateAccountMutation } from '@/features/finance/hooks/use-accounts-query';
+import {
+  ACCOUNT_CURRENCY_OPTIONS,
+  ACCOUNT_TYPE_OPTIONS,
+} from '@/features/finance/lib/constants';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { StatusBar } from 'expo-status-bar';
@@ -21,16 +25,6 @@ import {
   TextInput,
   View,
 } from 'react-native';
-
-const ACCOUNT_TYPE_OPTIONS = [
-  { label: 'Cash', value: 'CASH' },
-  { label: 'Bank account', value: 'BANK_ACCOUNT' },
-  { label: 'E-wallet', value: 'E_WALLET' },
-  { label: 'Credit card', value: 'CREDIT_CARD' },
-  { label: 'Other', value: 'OTHER' },
-] as const;
-
-const ACCOUNT_CURRENCY_OPTIONS = ['PHP', 'USD', 'SGD'] as const;
 
 export default function AccountComposeScreen() {
   const params = useLocalSearchParams<{ type?: string; name?: string }>();

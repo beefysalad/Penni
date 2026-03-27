@@ -9,6 +9,8 @@ import {
 } from '@/features/finance/lib/finance.schemas';
 import { useCreateBudgetMutation } from '@/features/finance/hooks/use-budgets-query';
 import { useCategoriesQuery } from '@/features/finance/hooks/use-categories-query';
+import { formatPeriod } from '@/features/finance/lib/formatters';
+import { endOfMonth, startOfMonth } from '@/features/settings/lib/budget-helpers';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { StatusBar } from 'expo-status-bar';
@@ -22,29 +24,6 @@ import {
   TextInput,
   View,
 } from 'react-native';
-
-// ─── Period helpers ───────────────────────────────────────────────────────────
-
-function startOfMonth() {
-  const d = new Date();
-  d.setDate(1);
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString();
-}
-
-function endOfMonth() {
-  const d = new Date();
-  d.setMonth(d.getMonth() + 1, 0);
-  d.setHours(23, 59, 59, 999);
-  return d.toISOString();
-}
-
-function formatPeriod(start: string, end: string) {
-  const s = new Date(start);
-  const e = new Date(end);
-  const fmt = new Intl.DateTimeFormat('en-PH', { month: 'short', day: 'numeric' });
-  return `${fmt.format(s)} – ${fmt.format(e)}`;
-}
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 

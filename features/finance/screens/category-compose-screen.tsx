@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useCreateCategoryMutation } from '@/features/finance/hooks/use-categories-query';
 import { slugifyCategoryName } from '@/features/finance/lib/category-utils';
+import { CATEGORY_COLORS, CATEGORY_TYPES } from '@/features/finance/lib/constants';
 import {
   createCategorySchema,
   type CreateCategoryFormValues,
@@ -22,13 +23,6 @@ import {
   TextInput,
   View,
 } from 'react-native';
-
-const CATEGORY_TYPES = [
-  { label: 'Expense', value: 'EXPENSE' },
-  { label: 'Income', value: 'INCOME' },
-] as const;
-
-const CATEGORY_COLORS = ['#8BFF62', '#5AA9FF', '#41D6B2', '#FFC857', '#FF8A94'] as const;
 
 export default function CategoryComposeScreen() {
   const createCategoryMutation = useCreateCategoryMutation();
