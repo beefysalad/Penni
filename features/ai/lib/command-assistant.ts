@@ -12,6 +12,7 @@ import type {
   CategoryType,
   RecurrenceFrequency,
 } from '@/features/finance/lib/finance.types';
+import { formatRecurrencePhrase } from '@/features/finance/lib/formatters';
 import { z } from 'zod';
 
 const parsedCommandSchema = z.discriminatedUnion('intent', [
@@ -111,6 +112,14 @@ function inferAccountType(name: string, rawType?: string): AccountType {
 
 function inferRecurrence(value: string): RecurrenceFrequency | null {
   const source = value.toLowerCase();
+  if (
+    source.includes('semi-month') ||
+    source.includes('semi month') ||
+    source.includes('twice a month') ||
+    source.includes('twice monthly')
+  ) {
+    return 'SEMI_MONTHLY';
+  }
   if (source.includes('week')) return 'WEEKLY';
   if (source.includes('quarter')) return 'QUARTERLY';
   if (source.includes('year') || source.includes('annual')) return 'YEARLY';
@@ -379,7 +388,7 @@ export function buildExecutableCommand(parsed: ParsedCommand, context: { account
     previewTitle: parsed.type === 'EXPENSE' ? 'Create recurring expense' : 'Create recurring income',
     previewLines: [
       `${validated.data.title} · ${validated.data.amount} ${validated.data.currency}`,
-      `Repeats ${validated.data.recurrence.toLowerCase()}`,
+      `Repeats ${formatRecurrencePhrase(validated.data.recurrence, validated.data.semiMonthlyDays)}`,
       account ? `Account: ${account.name}` : 'Account: optional',
     ],
     payload: {

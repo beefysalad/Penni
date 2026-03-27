@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { getDaysUntil } from '@/features/dashboard/lib/home-helpers';
-import { formatCompactDate, formatCurrency } from '@/features/finance/lib/formatters';
+import { formatCompactDate, formatCurrency, formatRecurrenceLabel } from '@/features/finance/lib/formatters';
 import { getSpentForBudget } from '@/features/finance/lib/selectors';
 import type { Budget, PlannedItem, Transaction } from '@/features/finance/lib/finance.types';
 import {
@@ -38,38 +38,38 @@ export function SkeletonHeroCard() {
 }
 
 export function HomeBalanceHero({
-  totalBalance,
-  topAccountName,
-  topAccountBalance,
-  expenseCategoriesCount,
-
-  onAddIncome,
+  leftAfterRecurring,
+  nextBillName,
+  nextBillTiming,
+  nextIncomeName,
+  nextIncomeTiming,
+  onNewTransaction,
   onOpenAccounts,
 }: {
-  totalBalance: number;
-  topAccountName: string;
-  topAccountBalance: string | null;
-  expenseCategoriesCount: number;
-
-  onAddIncome: () => void;
+  leftAfterRecurring: number;
+  nextBillName: string;
+  nextBillTiming: string;
+  nextIncomeName: string;
+  nextIncomeTiming: string;
+  onNewTransaction: () => void;
   onOpenAccounts: () => void;
 }) {
-  const isNegative = totalBalance < 0;
+  const isNegative = leftAfterRecurring < 0;
 
   return (
     <View className="rounded-[30px] border border-[#1b2a21] bg-[#111916] p-5">
       <View className="flex-row items-start justify-between gap-4">
         <View className="flex-1">
-          <Text className="text-sm font-medium text-white/65">Net worth</Text>
+          <Text className="text-sm font-medium text-white/65">Left after recurring</Text>
           <Text
             className={`mt-2 text-[34px] font-semibold tracking-[-1px] ${isNegative ? 'text-[#ff8a94]' : 'text-white'}`}>
-            {formatCurrency(totalBalance)}
+            {formatCurrency(leftAfterRecurring)}
           </Text>
         </View>
         <View className={`rounded-full px-3 py-2 ${isNegative ? 'bg-[#2c1a1f]' : 'bg-[#1a2c1f]'}`}>
           <Text
             className={`text-xs font-semibold uppercase tracking-[1.8px] ${isNegative ? 'text-[#ff8a94]' : 'text-[#8bff62]'}`}>
-            {isNegative ? 'Liability' : 'Live'}
+            {isNegative ? 'Tight' : 'Planned'}
           </Text>
         </View>
       </View>
@@ -77,32 +77,30 @@ export function HomeBalanceHero({
       <View className="mt-5 flex-row gap-3">
         <View className="flex-1 rounded-[24px] bg-[#18221d] p-4">
           <View className="size-10 items-center justify-center rounded-full bg-[#1f3325]">
-            <Icon as={WalletCardsIcon} className="size-5 text-[#8bff62]" />
+            <Icon as={CalendarIcon} className="size-5 text-[#8bff62]" />
           </View>
           <Text className="mt-4 text-xs font-semibold uppercase tracking-[1.8px] text-[#93a19a]">
-            Main account
+            Next bill
           </Text>
           <Text className="mt-2 text-[17px] font-semibold leading-6 text-white">
-            {topAccountName}
+            {nextBillName}
           </Text>
           <Text className="mt-1 text-sm leading-5 text-[#93a19a]">
-            {topAccountBalance ?? 'Add your first account to start tracking.'}
+            {nextBillTiming}
           </Text>
         </View>
         <View className="flex-1 rounded-[24px] bg-[#141b1f] p-4">
           <View className="size-10 items-center justify-center rounded-full bg-[#1c2830]">
-            <Icon as={CalendarIcon} className="size-5 text-[#41d6b2]" />
+            <Icon as={TrendingUpIcon} className="size-5 text-[#41d6b2]" />
           </View>
           <Text className="mt-4 text-xs font-semibold uppercase tracking-[1.8px] text-[#93a19a]">
-            Categories
+            Next income
           </Text>
           <Text className="mt-2 text-[17px] font-semibold leading-6 text-white">
-            {expenseCategoriesCount > 0 ? `${expenseCategoriesCount} ready` : 'Not set up'}
+            {nextIncomeName}
           </Text>
           <Text className="mt-1 text-sm leading-5 text-[#93a19a]">
-            {expenseCategoriesCount > 0
-              ? 'Spending buckets are ready for logging.'
-              : 'Default categories will appear once synced.'}
+            {nextIncomeTiming}
           </Text>
         </View>
       </View>
@@ -113,7 +111,7 @@ export function HomeBalanceHero({
         contentContainerClassName="gap-2 pt-4">
         <Pressable
           className="flex-row items-center gap-1.5 rounded-full bg-[#16211b] px-3.5 py-2"
-          onPress={onAddIncome}>
+          onPress={onNewTransaction}>
           <ArrowUpRightIcon color="#41d6b2" size={13} />
           <Text className="text-xs font-semibold text-[#41d6b2]">Add Transaction</Text>
         </Pressable>
@@ -312,7 +310,7 @@ export function UpcomingSection({
                           </Text>
                           <Text className="text-[10px] text-[#4a5650]">·</Text>
                           <Text className="text-xs capitalize text-[#41d6b2]">
-                            {plannedItem.recurrence.toLowerCase()}
+                            {formatRecurrenceLabel(plannedItem.recurrence, plannedItem.semiMonthlyDays)}
                           </Text>
                         </View>
                       </View>
@@ -356,7 +354,7 @@ export function UpcomingSection({
                           </Text>
                           <Text className="text-[10px] text-[#4a5650]">·</Text>
                           <Text className="text-xs capitalize text-[#ff8a94]">
-                            {plannedItem.recurrence.toLowerCase()}
+                            {formatRecurrenceLabel(plannedItem.recurrence, plannedItem.semiMonthlyDays)}
                           </Text>
                           {showUrgency ? (
                             <>

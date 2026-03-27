@@ -7,14 +7,17 @@ import {
   SkeletonHeroCard,
   UpcomingSection,
 } from '@/features/dashboard/components/home-sections';
-import { getGreeting } from '@/features/dashboard/lib/home-helpers';
+import {
+  getGreeting,
+  getNextPlannedItem,
+  getProjectedBalanceAfterRecurring,
+  getUpcomingTimingLabel,
+} from '@/features/dashboard/lib/home-helpers';
 import { useAccountsQuery } from '@/features/finance/hooks/use-accounts-query';
 import { useBudgetsQuery } from '@/features/finance/hooks/use-budgets-query';
-import { useCategoriesQuery } from '@/features/finance/hooks/use-categories-query';
 import { usePlannedItemsQuery } from '@/features/finance/hooks/use-planned-items-query';
 import { useTransactionsQuery } from '@/features/finance/hooks/use-transactions-query';
-import { formatCurrency } from '@/features/finance/lib/formatters';
-import { getNetWorth, getPrimaryAssetAccount } from '@/features/finance/lib/selectors';
+import { getNetWorth } from '@/features/finance/lib/selectors';
 import { useUser } from '@clerk/clerk-expo';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -24,22 +27,30 @@ import { ScrollView, View } from 'react-native';
 export default function HomeScreen() {
   const { user } = useUser();
   const accountsQuery = useAccountsQuery();
-  const expenseCategoriesQuery = useCategoriesQuery({ type: 'EXPENSE' });
   const plannedItemsQuery = usePlannedItemsQuery({ isActive: true });
   const transactionsQuery = useTransactionsQuery();
   const budgetsQuery = useBudgetsQuery();
 
   const firstName = user?.firstName || 'there';
   const accounts = accountsQuery.data ?? [];
-  const expenseCategories = expenseCategoriesQuery.data ?? [];
-  const plannedItems = (plannedItemsQuery.data ?? []).slice(0, 5);
+  const allPlannedItems = plannedItemsQuery.data ?? [];
+  const plannedItems = allPlannedItems.slice(0, 5);
   const allTransactions = transactionsQuery.data ?? [];
   const recentTransactions = allTransactions.slice(0, 5);
   const budgets = budgetsQuery.data ?? [];
   const incomePlannedItems = plannedItems.filter((item) => item.type === 'INCOME');
   const expensePlannedItems = plannedItems.filter((item) => item.type === 'EXPENSE');
   const totalBalance = getNetWorth(accounts);
-  const topAccount = getPrimaryAssetAccount(accounts);
+  const leftAfterRecurring = getProjectedBalanceAfterRecurring(totalBalance, allPlannedItems);
+  const nextBill = getNextPlannedItem(allPlannedItems, 'EXPENSE');
+  const nextIncome = getNextPlannedItem(allPlannedItems, 'INCOME');
+
+  const nextBillTiming = nextBill
+    ? getUpcomingTimingLabel(nextBill.nextOccurrenceAt ?? nextBill.startDate)
+    : 'No bill scheduled';
+  const nextIncomeTiming = nextIncome
+    ? getUpcomingTimingLabel(nextIncome.nextOccurrenceAt ?? nextIncome.startDate)
+    : 'No income scheduled';
 
   const recentIncome = useMemo(
     () =>
@@ -78,13 +89,12 @@ export default function HomeScreen() {
             <SkeletonHeroCard />
           ) : (
             <HomeBalanceHero
-              totalBalance={totalBalance}
-              topAccountName={topAccount?.name ?? 'No account yet'}
-              topAccountBalance={
-                topAccount ? formatCurrency(Number(topAccount.balance), topAccount.currency) : null
-              }
-              expenseCategoriesCount={expenseCategories.length}
-              onAddIncome={() => router.push('/transaction-compose?type=INCOME')}
+              leftAfterRecurring={leftAfterRecurring}
+              nextBillName={nextBill?.title ?? 'Nothing due'}
+              nextBillTiming={nextBillTiming}
+              nextIncomeName={nextIncome?.title ?? 'Nothing incoming'}
+              nextIncomeTiming={nextIncomeTiming}
+              onNewTransaction={() => router.push('/transaction-compose')}
               onOpenAccounts={() => router.replace('/accounts')}
             />
           )}

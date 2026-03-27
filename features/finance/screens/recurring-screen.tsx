@@ -1,7 +1,7 @@
 import { AppPageHeader } from '@/components/navigation/app-page-header';
 import { AppTabBar } from '@/components/navigation/app-tab-bar';
 import { usePlannedItemsQuery, useDeletePlannedItemMutation } from '@/features/finance/hooks/use-planned-items-query';
-import { formatCompactDate, formatCurrency } from '@/features/finance/lib/formatters';
+import { formatCompactDate, formatCurrency, formatRecurrenceLabel } from '@/features/finance/lib/formatters';
 import type { PlannedItem } from '@/features/finance/lib/finance.types';
 import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
@@ -76,7 +76,7 @@ function PlannedItemSwipeableRow({ item, onDelete }: { item: PlannedItem; onDele
                 className={`text-[13px] capitalize font-medium ${
                   isExpense ? 'text-[#ff8a94]' : 'text-[#41d6b2]'
                 }`}>
-                {item.recurrence.toLowerCase()}
+                {formatRecurrenceLabel(item.recurrence, item.semiMonthlyDays)}
               </Text>
             </View>
           </View>

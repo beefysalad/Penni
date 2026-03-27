@@ -1,3 +1,5 @@
+import type { RecurrenceFrequency } from '@/features/finance/lib/finance.types';
+
 export function formatCurrency(
   value: number | string,
   currency = 'PHP',
@@ -83,4 +85,50 @@ export function formatDueDayOfMonth(day: number | null | undefined) {
           : 'th';
 
   return `${day}${suffix}`;
+}
+
+export function formatRecurrenceLabel(
+  recurrence: RecurrenceFrequency,
+  semiMonthlyDays?: number[] | null,
+) {
+  switch (recurrence) {
+    case 'WEEKLY':
+      return 'Weekly';
+    case 'MONTHLY':
+      return 'Monthly';
+    case 'SEMI_MONTHLY':
+      if (semiMonthlyDays && semiMonthlyDays.length === 2) {
+        const sortedDays = [...semiMonthlyDays].sort((a, b) => a - b);
+        const [firstDay, secondDay] = sortedDays;
+        return `${formatDueDayOfMonth(firstDay)} & ${formatDueDayOfMonth(secondDay)}`;
+      }
+      return 'Semi-monthly';
+    case 'QUARTERLY':
+      return 'Quarterly';
+    case 'YEARLY':
+      return 'Yearly';
+  }
+}
+
+export function formatRecurrencePhrase(
+  recurrence: RecurrenceFrequency,
+  semiMonthlyDays?: number[] | null,
+) {
+  switch (recurrence) {
+    case 'WEEKLY':
+      return 'every week';
+    case 'MONTHLY':
+      return 'every month';
+    case 'SEMI_MONTHLY':
+      if (semiMonthlyDays && semiMonthlyDays.length === 2) {
+        const sortedDays = [...semiMonthlyDays].sort((a, b) => a - b);
+        const [firstDay, secondDay] = sortedDays;
+        return `twice a month on the ${formatDueDayOfMonth(firstDay)} and ${formatDueDayOfMonth(secondDay)}`;
+      }
+      return 'twice a month';
+    case 'QUARTERLY':
+      return 'every quarter';
+    case 'YEARLY':
+      return 'every year';
+  }
 }

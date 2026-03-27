@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 const accountTypeSchema = z.enum(['CASH', 'BANK_ACCOUNT', 'E_WALLET', 'CREDIT_CARD', 'OTHER']);
 const categoryTypeSchema = z.enum(['EXPENSE', 'INCOME']);
-const recurrenceFrequencySchema = z.enum(['WEEKLY', 'MONTHLY', 'QUARTERLY', 'YEARLY']);
+const recurrenceFrequencySchema = z.enum(['WEEKLY', 'MONTHLY', 'SEMI_MONTHLY', 'QUARTERLY', 'YEARLY']);
 
 export const createAccountSchema = z
   .object({
@@ -108,19 +108,52 @@ export const createTransactionSchema = z.object({
   transactionAt: z.string().datetime(),
 });
 
-export const createPlannedItemSchema = z.object({
-  type: categoryTypeSchema,
-  title: z.string().trim().min(1, 'Name is required.').max(160),
-  notes: z.string().trim().max(2000).optional(),
-  amount: z
-    .string()
-    .trim()
-    .min(1, 'Amount is required.')
-    .regex(/^-?\d+(\.\d{1,2})?$/, 'Use a valid amount like 1200 or 1200.50.'),
-  currency: z.string().trim().length(3, 'Use a 3-letter currency code.'),
-  startDate: z.string().datetime(),
-  recurrence: recurrenceFrequencySchema,
-});
+export const createPlannedItemSchema = z
+  .object({
+    accountId: z.string().trim().optional(),
+    type: categoryTypeSchema,
+    title: z.string().trim().min(1, 'Name is required.').max(160),
+    notes: z.string().trim().max(2000).optional(),
+    amount: z
+      .string()
+      .trim()
+      .min(1, 'Amount is required.')
+      .regex(/^-?\d+(\.\d{1,2})?$/, 'Use a valid amount like 1200 or 1200.50.'),
+    currency: z.string().trim().length(3, 'Use a 3-letter currency code.'),
+    startDate: z.string().datetime(),
+    recurrence: recurrenceFrequencySchema,
+    semiMonthlyDays: z.array(z.number().int().min(1).max(31)).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.recurrence !== 'SEMI_MONTHLY') {
+      return;
+    }
+
+    if (!value.semiMonthlyDays || value.semiMonthlyDays.length !== 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['semiMonthlyDays'],
+        message: 'Choose two payout days for a semi-monthly item.',
+      });
+      return;
+    }
+
+    if (new Set(value.semiMonthlyDays).size !== 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['semiMonthlyDays'],
+        message: 'The two payout days need to be different.',
+      });
+    }
+
+    if (value.type === 'INCOME' && !value.accountId?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['accountId'],
+        message: 'Choose which account this income should land in.',
+      });
+    }
+  });
 
 export const createBudgetSchema = z.object({
   name: z.string().trim().min(1, 'Budget name is required.').max(120),

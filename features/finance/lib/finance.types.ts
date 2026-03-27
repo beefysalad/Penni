@@ -1,7 +1,7 @@
 export type AccountType = 'CASH' | 'BANK_ACCOUNT' | 'E_WALLET' | 'CREDIT_CARD' | 'OTHER';
 export type CategoryType = 'EXPENSE' | 'INCOME';
 export type TransactionSource = 'MANUAL' | 'RECURRING' | 'IMPORTED';
-export type RecurrenceFrequency = 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+export type RecurrenceFrequency = 'WEEKLY' | 'MONTHLY' | 'SEMI_MONTHLY' | 'QUARTERLY' | 'YEARLY';
 
 export type Account = {
   id: string;
@@ -72,6 +72,7 @@ export type PlannedItem = {
   currency: string;
   startDate: string;
   recurrence: RecurrenceFrequency;
+  semiMonthlyDays: number[];
   isActive: boolean;
   nextOccurrenceAt: string | null;
   lastProcessedAt: string | null;

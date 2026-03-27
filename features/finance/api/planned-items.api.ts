@@ -18,6 +18,7 @@ export type CreatePlannedItemInput = {
   currency: string;
   startDate: string;
   recurrence: RecurrenceFrequency;
+  semiMonthlyDays?: number[];
   isActive?: boolean;
 };
 

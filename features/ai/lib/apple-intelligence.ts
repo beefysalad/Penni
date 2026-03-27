@@ -1,5 +1,6 @@
 import { NativeModules, Platform } from 'react-native';
 import type { PlannedItem, Transaction } from '@/features/finance/lib/finance.types';
+import { formatRecurrencePhrase } from '@/features/finance/lib/formatters';
 
 type PenniAIModule = {
   getAvailability: () => Promise<{
@@ -83,7 +84,7 @@ export async function generatePenniHomeSummary(input: {
             return `${item.type}: ${item.title}, ${formatCurrency(
               Number(item.amount),
               item.currency,
-            )}, every ${item.recurrence.toLowerCase()}, next ${formatDate(when)}.`;
+            )}, ${formatRecurrencePhrase(item.recurrence, item.semiMonthlyDays)}, next ${formatDate(when)}.`;
           })
           .join(' ')
       : 'No upcoming planned items.';
