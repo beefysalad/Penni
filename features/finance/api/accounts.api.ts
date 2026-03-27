@@ -7,6 +7,9 @@ export type CreateAccountInput = {
   currency: string;
   balance: string;
   institutionName?: string;
+  creditLimit?: string;
+  availableCredit?: string;
+  dueDayOfMonth?: number;
 };
 
 export async function listAccounts(token: string) {

@@ -9,11 +9,12 @@ import {
   AccountCard,
   AccountsEmptyState,
   AccountSkeletonCard,
+  AccountSwipeableRow,
 } from '@/features/finance/components/accounts-sections';
 import { useAccountsQuery, useDeleteAccountMutation } from '@/features/finance/hooks/use-accounts-query';
 import { ACCOUNT_FILTERS, type AccountFilter, ACCOUNT_TYPE_META } from '@/features/finance/lib/constants';
 import { formatCurrency } from '@/features/finance/lib/formatters';
-import { getTypeBreakdown } from '@/features/finance/lib/selectors';
+import { getNetWorth, getTypeBreakdown } from '@/features/finance/lib/selectors';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import {
@@ -22,10 +23,12 @@ import {
   BanknoteIcon,
   CalendarClockIcon,
   PlusIcon,
+  TrendingDownIcon,
   TrendingUpIcon,
 } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
@@ -36,10 +39,10 @@ export default function AccountsScreen() {
   const [activeFilter, setActiveFilter] = useState<AccountFilter>('All');
   const [search, setSearch] = useState('');
   const [showAllAccounts, setShowAllAccounts] = useState(false);
-  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
 
-  const totalBalance = accounts.reduce((sum, a) => sum + Number(a.balance), 0);
+  const totalBalance = getNetWorth(accounts);
   const typeBreakdown = useMemo(() => getTypeBreakdown(accounts), [accounts]);
+  const isNegativeNetWorth = totalBalance < 0;
 
   const filteredAccounts = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -59,7 +62,7 @@ export default function AccountsScreen() {
 
 
   return (
-    <View className="flex-1 bg-[#060b08]">
+    <GestureHandlerRootView className="flex-1 bg-[#060b08]">
       <StatusBar style="light" />
       <ScrollView className="flex-1" contentContainerClassName="pb-44" showsVerticalScrollIndicator={false}>
         {/* ─── Header ─────────────────────────────────────────────────────── */}
@@ -78,12 +81,17 @@ export default function AccountsScreen() {
             <View className="flex-row items-start justify-between gap-4">
               <View className="flex-1">
                 <Text className="text-sm font-medium text-[#7f8c86]">Net worth</Text>
-                <Text className="mt-1 text-[34px] font-semibold tracking-[-1px] text-[#f4f7f5]">
+                <Text
+                  className={`mt-1 text-[34px] font-semibold tracking-[-1px] ${isNegativeNetWorth ? 'text-[#ff8a94]' : 'text-[#f4f7f5]'}`}>
                   {formatCurrency(totalBalance)}
                 </Text>
               </View>
-              <View className="size-12 items-center justify-center rounded-full bg-[#1a2c1f]">
-                <Icon as={TrendingUpIcon} className="size-5 text-[#8bff62]" />
+              <View
+                className={`size-12 items-center justify-center rounded-full ${isNegativeNetWorth ? 'bg-[#2c1a1f]' : 'bg-[#1a2c1f]'}`}>
+                <Icon
+                  as={isNegativeNetWorth ? TrendingDownIcon : TrendingUpIcon}
+                  className={`size-5 ${isNegativeNetWorth ? 'text-[#ff8a94]' : 'text-[#8bff62]'}`}
+                />
               </View>
             </View>
 
@@ -96,6 +104,7 @@ export default function AccountsScreen() {
                 {typeBreakdown.map(([type, balance]) => {
                   const meta = ACCOUNT_TYPE_META[type];
                   const TypeIcon = meta.icon;
+                  const isNegativeBreakdown = balance < 0;
 
                   return (
                     <View
@@ -105,7 +114,7 @@ export default function AccountsScreen() {
                       <Text className={`text-xs font-semibold ${meta.accentTextClassName}`}>
                         {meta.label}
                       </Text>
-                      <Text className="text-xs text-[#7f8c86]">
+                      <Text className={`text-xs ${isNegativeBreakdown ? 'text-[#ff8a94]' : 'text-[#7f8c86]'}`}>
                         {formatCurrency(balance)}
                       </Text>
                     </View>
@@ -202,7 +211,7 @@ export default function AccountsScreen() {
             />
 
             {/* ─── Account list ─────────────────────────────────────────────── */}
-            <View className="mt-4 gap-3">
+            <View className="mt-4 gap-5">
               {accountsQuery.isLoading ? (
                 <>
                   <AccountSkeletonCard />
@@ -213,18 +222,13 @@ export default function AccountsScreen() {
 
               {!accountsQuery.isLoading && visibleAccounts.length > 0
                 ? visibleAccounts.map((account) => (
-                    <AccountCard
+                    <AccountSwipeableRow
                       key={account.id}
-                      account={account}
-                      isConfirmingDelete={confirmingDeleteId === account.id}
-                      isDeleting={deleteAccountMutation.isPending}
-                      onDeletePress={() => setConfirmingDeleteId(account.id)}
-                      onCancelDelete={() => setConfirmingDeleteId(null)}
-                      onConfirmDelete={async () => {
+                      onDelete={async () => {
                         await deleteAccountMutation.mutateAsync(account.id);
-                        setConfirmingDeleteId(null);
-                      }}
-                    />
+                      }}>
+                      <AccountCard account={account} />
+                    </AccountSwipeableRow>
                   ))
                 : null}
 
@@ -251,6 +255,6 @@ export default function AccountsScreen() {
       </ScrollView>
 
       <AppTabBar currentTab="accounts" />
-    </View>
+    </GestureHandlerRootView>
   );
 }

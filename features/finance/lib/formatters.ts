@@ -69,3 +69,18 @@ export function formatPeriod(start: string, end: string) {
   const formatter = new Intl.DateTimeFormat('en-PH', { month: 'short', day: 'numeric' });
   return `${formatter.format(s)} – ${formatter.format(e)}`;
 }
+
+export function formatDueDayOfMonth(day: number | null | undefined) {
+  if (!day) return null;
+
+  const suffix =
+    day % 10 === 1 && day % 100 !== 11
+      ? 'st'
+      : day % 10 === 2 && day % 100 !== 12
+        ? 'nd'
+        : day % 10 === 3 && day % 100 !== 13
+          ? 'rd'
+          : 'th';
+
+  return `${day}${suffix}`;
+}

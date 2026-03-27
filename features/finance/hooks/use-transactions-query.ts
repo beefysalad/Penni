@@ -7,7 +7,8 @@ import {
   type ListTransactionsParams,
   type PaginatedTransactionsResponse,
 } from '@/features/finance/api/transactions.api';
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { Transaction } from '@/features/finance/lib/finance.types';
+import { InfiniteData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const transactionsQueryKey = (params?: ListTransactionsParams) =>
   ['transactions', params ?? {}] as const;
@@ -68,7 +69,51 @@ export function useDeleteTransactionMutation() {
 
   return useMutation({
     mutationFn: (id: string) => authenticatedRequest((token) => deleteTransaction(token, id)),
-    onSuccess: async () => {
+    onMutate: async (id: string) => {
+      await queryClient.cancelQueries({ queryKey: ['transactions'] });
+
+      const previousTransactionQueries = queryClient.getQueriesData({ queryKey: ['transactions'] });
+
+      queryClient.setQueriesData(
+        { queryKey: ['transactions'] },
+        (
+          current:
+            | Transaction[]
+            | InfiniteData<PaginatedTransactionsResponse>
+            | PaginatedTransactionsResponse
+            | undefined,
+        ) => {
+          if (!current) return current;
+
+          if (Array.isArray(current)) {
+            return current.filter((transaction) => transaction.id !== id);
+          }
+
+          if ('pages' in current) {
+            return {
+              ...current,
+              pages: current.pages.map((page) => ({
+                ...page,
+                data: page.data.filter((transaction) => transaction.id !== id),
+              })),
+            };
+          }
+
+          return {
+            ...current,
+            data: current.data.filter((transaction) => transaction.id !== id),
+          };
+        },
+      );
+
+      return { previousTransactionQueries };
+    },
+    onError: (_error, _id, context) => {
+      for (const [queryKey, data] of context?.previousTransactionQueries ?? []) {
+        queryClient.setQueryData(queryKey, data);
+      }
+    },
+    onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
   });

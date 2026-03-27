@@ -11,6 +11,9 @@ export type Account = {
   type: AccountType;
   currency: string;
   balance: string;
+  creditLimit: string | null;
+  availableCredit: string | null;
+  dueDayOfMonth: number | null;
   institutionName: string | null;
   isArchived: boolean;
   lastSyncedAt: string | null;

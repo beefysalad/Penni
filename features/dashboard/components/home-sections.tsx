@@ -54,17 +54,23 @@ export function HomeBalanceHero({
   onAddIncome: () => void;
   onOpenAccounts: () => void;
 }) {
+  const isNegative = totalBalance < 0;
+
   return (
     <View className="rounded-[30px] border border-[#1b2a21] bg-[#111916] p-5">
       <View className="flex-row items-start justify-between gap-4">
         <View className="flex-1">
-          <Text className="text-sm font-medium text-white/65">Total balance</Text>
-          <Text className="mt-2 text-[34px] font-semibold tracking-[-1px] text-white">
+          <Text className="text-sm font-medium text-white/65">Net worth</Text>
+          <Text
+            className={`mt-2 text-[34px] font-semibold tracking-[-1px] ${isNegative ? 'text-[#ff8a94]' : 'text-white'}`}>
             {formatCurrency(totalBalance)}
           </Text>
         </View>
-        <View className="rounded-full bg-[#1a2c1f] px-3 py-2">
-          <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-[#8bff62]">Live</Text>
+        <View className={`rounded-full px-3 py-2 ${isNegative ? 'bg-[#2c1a1f]' : 'bg-[#1a2c1f]'}`}>
+          <Text
+            className={`text-xs font-semibold uppercase tracking-[1.8px] ${isNegative ? 'text-[#ff8a94]' : 'text-[#8bff62]'}`}>
+            {isNegative ? 'Liability' : 'Live'}
+          </Text>
         </View>
       </View>
 

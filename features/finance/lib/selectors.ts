@@ -7,11 +7,26 @@ export type TransactionSection = {
   data: Transaction[];
 };
 
+export function getAccountNetContribution(account: Account) {
+  const balance = Number(account.balance);
+  return account.type === 'CREDIT_CARD' ? -Math.abs(balance) : balance;
+}
+
+export function getNetWorth(accounts: Account[]) {
+  return accounts.reduce((sum, account) => sum + getAccountNetContribution(account), 0);
+}
+
+export function getPrimaryAssetAccount(accounts: Account[]) {
+  return [...accounts]
+    .filter((account) => account.type !== 'CREDIT_CARD')
+    .sort((a, b) => Number(b.balance) - Number(a.balance))[0] ?? null;
+}
+
 export function getTypeBreakdown(accounts: Account[]) {
   const map = new Map<Account['type'], number>();
 
   for (const account of accounts) {
-    map.set(account.type, (map.get(account.type) ?? 0) + Number(account.balance));
+    map.set(account.type, (map.get(account.type) ?? 0) + getAccountNetContribution(account));
   }
 
   return Array.from(map.entries())

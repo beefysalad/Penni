@@ -1,4 +1,5 @@
 import { generateAppleIntelligenceText } from '@/features/ai/lib/apple-intelligence';
+import type { CreateAccountInput } from '@/features/finance/api/accounts.api';
 import {
   createAccountSchema,
   createPlannedItemSchema,
@@ -54,7 +55,7 @@ export type ExecutableCommand =
       kind: 'create_account';
       previewTitle: string;
       previewLines: string[];
-      payload: z.input<typeof createAccountSchema>;
+      payload: CreateAccountInput;
     }
   | {
       kind: 'create_transaction';
@@ -298,7 +299,14 @@ export function buildExecutableCommand(parsed: ParsedCommand, context: { account
         `${validated.data.type.replaceAll('_', ' ')} · ${validated.data.currency}`,
         `Starting balance ${validated.data.balance}`,
       ],
-      payload: validated.data,
+      payload: {
+        ...validated.data,
+        creditLimit: validated.data.creditLimit?.trim() || undefined,
+        availableCredit: validated.data.availableCredit?.trim() || undefined,
+        dueDayOfMonth: validated.data.dueDayOfMonth?.trim()
+          ? Number(validated.data.dueDayOfMonth.trim())
+          : undefined,
+      },
     } satisfies ExecutableCommand;
   }
 

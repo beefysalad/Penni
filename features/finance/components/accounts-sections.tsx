@@ -3,11 +3,13 @@ import { Icon } from '@/components/ui/icon';
 import { Badge } from '@/components/ui/pill';
 import { Text } from '@/components/ui/text';
 import { ACCOUNT_TYPE_META, type AccountFilter } from '@/features/finance/lib/constants';
-import { formatCurrency } from '@/features/finance/lib/formatters';
+import { formatCurrency, formatDueDayOfMonth } from '@/features/finance/lib/formatters';
 import type { Account } from '@/features/finance/lib/finance.types';
 import { router } from 'expo-router';
 import { PlusIcon, Trash2Icon, WalletIcon } from 'lucide-react-native';
-import { Pressable, View } from 'react-native';
+import React from 'react';
+import { Animated, Pressable, View } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 
 export function AccountSkeletonCard() {
   return (
@@ -61,29 +63,26 @@ export function AccountsEmptyState({ filter }: { filter: AccountFilter }) {
   );
 }
 
-export function AccountCard({
-  account,
-  isConfirmingDelete,
-  isDeleting,
-  onDeletePress,
-  onCancelDelete,
-  onConfirmDelete,
-}: {
-  account: Account;
-  isConfirmingDelete: boolean;
-  isDeleting: boolean;
-  onDeletePress: () => void;
-  onCancelDelete: () => void;
-  onConfirmDelete: () => void;
-}) {
+export function AccountCard({ account }: { account: Account }) {
   const meta = ACCOUNT_TYPE_META[account.type];
   const TypeIcon = meta.icon;
+  const isCreditCard = account.type === 'CREDIT_CARD';
+  const availableCredit = account.availableCredit ? Number(account.availableCredit) : null;
+  const creditLimit = account.creditLimit ? Number(account.creditLimit) : null;
+  const dueDayLabel = formatDueDayOfMonth(account.dueDayOfMonth);
+  const creditCardDetails = [
+    availableCredit !== null ? `Available ${formatCurrency(availableCredit, account.currency)}` : null,
+    creditLimit !== null ? `Limit ${formatCurrency(creditLimit, account.currency)}` : null,
+    dueDayLabel ? `Due ${dueDayLabel}` : null,
+  ]
+    .filter(Boolean)
+    .join('  •  ');
 
   return (
-    <View className={`overflow-hidden rounded-[24px] border ${meta.cardClassName ?? 'border-[#17211c] bg-[#131b17]'}`}>
+    <View className={`h-[138px] overflow-hidden rounded-[24px] border ${meta.cardClassName ?? 'border-[#17211c] bg-[#131b17]'}`}>
       <View className={`h-[3px] ${meta.gradientStripClassName ?? 'bg-[#8bff62]'} opacity-40`} />
 
-      <View className="px-4 pb-4 pt-3">
+      <View className="flex-1 justify-between px-4 pb-4 pt-3">
         <View className="flex-row items-center gap-3">
           <View className={`size-11 items-center justify-center rounded-full ${meta.iconWrapClassName}`}>
             <TypeIcon color="#f4f7f5" size={20} />
@@ -109,26 +108,63 @@ export function AccountCard({
           </View>
         </View>
 
-        {isConfirmingDelete ? (
-          <View className="mt-3 flex-row items-center justify-end gap-2 border-t border-white/5 pt-3">
-            <Text className="flex-1 text-xs font-medium text-[#ffb4bb]">Delete this account?</Text>
-            <Pressable className="rounded-full bg-[#131b17] px-3 py-2" onPress={onCancelDelete}>
-              <Text className="text-sm font-semibold text-[#dce2de]">Cancel</Text>
-            </Pressable>
-            <Pressable className="rounded-full bg-[#1d1416] px-3 py-2" disabled={isDeleting} onPress={onConfirmDelete}>
-              <View className="flex-row items-center gap-1.5">
-                <Trash2Icon color="#ff8a94" size={13} />
-                <Text className="text-sm font-semibold text-[#ff8a94]">{isDeleting ? 'Deleting…' : 'Confirm'}</Text>
-              </View>
-            </Pressable>
-          </View>
-        ) : (
-          <Pressable className="mt-3 flex-row items-center justify-end gap-1.5 border-t border-white/5 pt-3" onPress={onDeletePress}>
-            <Trash2Icon color="#ff8a94" size={13} />
-            <Text className="text-xs font-semibold text-[#ff8a94]">Remove</Text>
-          </Pressable>
-        )}
+        <View className="mt-3 min-h-[32px] border-t border-white/5 pt-3">
+          {isCreditCard && creditCardDetails ? (
+            <Text className="text-[13px] font-medium leading-5 text-[#b6c0bb]">{creditCardDetails}</Text>
+          ) : null}
+        </View>
       </View>
     </View>
+  );
+}
+
+export function AccountSwipeableRow({
+  children,
+  onDelete,
+}: {
+  children: React.ReactNode;
+  onDelete: () => void;
+}) {
+  const swipeableRef = React.useRef<Swipeable>(null);
+
+  const renderRightActions = (
+    _progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>,
+  ) => {
+    const scale = dragX.interpolate({
+      inputRange: [-80, 0],
+      outputRange: [1, 0.5],
+      extrapolate: 'clamp',
+    });
+
+    const opacity = dragX.interpolate({
+      inputRange: [-80, -20, 0],
+      outputRange: [1, 0.6, 0],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <Pressable
+        onPress={() => {
+          swipeableRef.current?.close();
+          onDelete();
+        }}
+        className="ml-4 items-center justify-center rounded-[24px] bg-[#3d1419] px-6">
+        <Animated.View style={{ transform: [{ scale }], opacity }} className="items-center gap-1">
+          <Trash2Icon color="#ff8a94" size={20} />
+          <Text className="text-[11px] font-semibold text-[#ff8a94]">Delete</Text>
+        </Animated.View>
+      </Pressable>
+    );
+  };
+
+  return (
+    <Swipeable
+      ref={swipeableRef}
+      renderRightActions={renderRightActions}
+      rightThreshold={40}
+      overshootRight={false}>
+      {children}
+    </Swipeable>
   );
 }

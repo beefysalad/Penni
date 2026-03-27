@@ -14,6 +14,7 @@ import { useCategoriesQuery } from '@/features/finance/hooks/use-categories-quer
 import { usePlannedItemsQuery } from '@/features/finance/hooks/use-planned-items-query';
 import { useTransactionsQuery } from '@/features/finance/hooks/use-transactions-query';
 import { formatCurrency } from '@/features/finance/lib/formatters';
+import { getNetWorth, getPrimaryAssetAccount } from '@/features/finance/lib/selectors';
 import { useUser } from '@clerk/clerk-expo';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -37,8 +38,8 @@ export default function HomeScreen() {
   const budgets = budgetsQuery.data ?? [];
   const incomePlannedItems = plannedItems.filter((item) => item.type === 'INCOME');
   const expensePlannedItems = plannedItems.filter((item) => item.type === 'EXPENSE');
-  const totalBalance = accounts.reduce((sum, account) => sum + Number(account.balance), 0);
-  const topAccount = accounts[0];
+  const totalBalance = getNetWorth(accounts);
+  const topAccount = getPrimaryAssetAccount(accounts);
 
   const recentIncome = useMemo(
     () =>

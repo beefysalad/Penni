@@ -54,19 +54,43 @@ export default function AccountComposeScreen() {
           : 'E_WALLET',
       currency: 'PHP',
       institutionName: '',
+      creditLimit: '',
+      availableCredit: '',
+      dueDayOfMonth: '',
     },
   });
 
   const selectedType = watch('type');
   const selectedCurrency = watch('currency');
+  const creditLimit = watch('creditLimit');
+  const availableCredit = watch('availableCredit');
+  const isCreditCard = selectedType === 'CREDIT_CARD';
+
+  const derivedCardBalance =
+    isCreditCard && creditLimit?.trim() && availableCredit?.trim()
+      ? Number(creditLimit) - Number(availableCredit)
+      : null;
 
   const onSubmit = handleSubmit(async (values) => {
+    const balance =
+      values.type === 'CREDIT_CARD'
+        ? `${Math.max(
+            0,
+            Number(values.creditLimit?.trim() ?? '0') - Number(values.availableCredit?.trim() ?? '0'),
+          )}`
+        : values.balance.trim();
+
     await createAccountMutation.mutateAsync({
       name: values.name.trim(),
-      balance: values.balance.trim(),
+      balance,
       type: values.type,
       currency: values.currency.trim().toUpperCase(),
       institutionName: values.institutionName?.trim() || undefined,
+      creditLimit: values.creditLimit?.trim() || undefined,
+      availableCredit: values.availableCredit?.trim() || undefined,
+      dueDayOfMonth: values.dueDayOfMonth?.trim()
+        ? Number(values.dueDayOfMonth.trim())
+        : undefined,
     });
 
     router.back();
@@ -128,29 +152,120 @@ export default function AccountComposeScreen() {
                   </View>
                 </Field>
 
-                <Field label="Starting balance" error={errors.balance?.message}>
-                  <View className="flex-row items-center rounded-[20px] bg-[#141d18] px-4 py-1 shadow-sm shadow-black/20">
-                    <Text className="mr-3 text-[22px] font-medium text-[#6f7d74]">₱</Text>
-                    <Controller
-                      control={control}
-                      name="balance"
-                      render={({ field: { onChange, value } }) => (
-                        <TextInput
-                          value={value}
-                          onChangeText={onChange}
-                          keyboardType="decimal-pad"
-                          placeholder="0.00"
-                          placeholderTextColor="#6f7d74"
-                          autoCorrect={false}
-                          spellCheck={false}
-                          autoComplete="off"
-                          className="h-12 flex-1 bg-transparent px-0 text-[22px] font-semibold text-[#f4f7f5]"
-                          style={NUMERIC_INPUT_STYLE}
+                {!isCreditCard ? (
+                  <Field label="Starting balance" error={errors.balance?.message}>
+                    <View className="flex-row items-center rounded-[20px] bg-[#141d18] px-4 py-1 shadow-sm shadow-black/20">
+                      <Text className="mr-3 text-[22px] font-medium text-[#6f7d74]">₱</Text>
+                      <Controller
+                        control={control}
+                        name="balance"
+                        render={({ field: { onChange, value } }) => (
+                          <TextInput
+                            value={value}
+                            onChangeText={onChange}
+                            keyboardType="decimal-pad"
+                            placeholder="0.00"
+                            placeholderTextColor="#6f7d74"
+                            autoCorrect={false}
+                            spellCheck={false}
+                            autoComplete="off"
+                            className="h-12 flex-1 bg-transparent px-0 text-[22px] font-semibold text-[#f4f7f5]"
+                            style={NUMERIC_INPUT_STYLE}
+                          />
+                        )}
+                      />
+                    </View>
+                  </Field>
+                ) : null}
+
+                {isCreditCard ? (
+                  <>
+                    <Field label="Total limit" error={errors.creditLimit?.message}>
+                      <View className="flex-row items-center rounded-[20px] bg-[#141d18] px-4 py-1 shadow-sm shadow-black/20">
+                        <Text className="mr-3 text-[22px] font-medium text-[#6f7d74]">₱</Text>
+                        <Controller
+                          control={control}
+                          name="creditLimit"
+                          render={({ field: { onChange, value } }) => (
+                            <TextInput
+                              value={value}
+                              onChangeText={onChange}
+                              keyboardType="decimal-pad"
+                              placeholder="0.00"
+                              placeholderTextColor="#6f7d74"
+                              autoCorrect={false}
+                              spellCheck={false}
+                              autoComplete="off"
+                              className="h-12 flex-1 bg-transparent px-0 text-[22px] font-semibold text-[#f4f7f5]"
+                              style={NUMERIC_INPUT_STYLE}
+                            />
+                          )}
                         />
-                      )}
-                    />
-                  </View>
-                </Field>
+                      </View>
+                    </Field>
+
+                    <Field label="Available limit" error={errors.availableCredit?.message}>
+                      <View className="flex-row items-center rounded-[20px] bg-[#141d18] px-4 py-1 shadow-sm shadow-black/20">
+                        <Text className="mr-3 text-[22px] font-medium text-[#6f7d74]">₱</Text>
+                        <Controller
+                          control={control}
+                          name="availableCredit"
+                          render={({ field: { onChange, value } }) => (
+                            <TextInput
+                              value={value}
+                              onChangeText={onChange}
+                              keyboardType="decimal-pad"
+                              placeholder="0.00"
+                              placeholderTextColor="#6f7d74"
+                              autoCorrect={false}
+                              spellCheck={false}
+                              autoComplete="off"
+                              className="h-12 flex-1 bg-transparent px-0 text-[22px] font-semibold text-[#f4f7f5]"
+                              style={NUMERIC_INPUT_STYLE}
+                            />
+                          )}
+                        />
+                      </View>
+                    </Field>
+
+                    <Field label="Due day" error={errors.dueDayOfMonth?.message}>
+                      <View className="rounded-[20px] bg-[#141d18] px-4 py-1 shadow-sm shadow-black/20">
+                        <Controller
+                          control={control}
+                          name="dueDayOfMonth"
+                          render={({ field: { onChange, value } }) => (
+                            <TextInput
+                              value={value}
+                              onChangeText={onChange}
+                              keyboardType="number-pad"
+                              placeholder="e.g. 16"
+                              placeholderTextColor="#6f7d74"
+                              autoCorrect={false}
+                              spellCheck={false}
+                              autoComplete="off"
+                              className="h-12 bg-transparent px-0 text-[17px] text-[#f4f7f5]"
+                              style={CENTERED_INPUT_STYLE}
+                            />
+                          )}
+                        />
+                      </View>
+                    </Field>
+
+                    <View className="rounded-[20px] border border-[#203326] bg-[#111c16] px-4 py-4">
+                      <Text className="text-[12px] font-semibold uppercase tracking-[2px] text-[#6f7d74]">
+                        Current balance owed
+                      </Text>
+                      <Text className="mt-2 text-[24px] font-semibold text-[#f4f7f5]">
+                        {derivedCardBalance !== null
+                          ? `₱${derivedCardBalance.toFixed(2)}`
+                          : 'Waiting on limit details'}
+                      </Text>
+                      <Text className="mt-1 text-sm leading-6 text-[#7f8c86]">
+                        Penni derives this from total limit minus available credit.
+                      </Text>
+                    </View>
+                  </>
+                ) : null}
               </View>
             </View>
 
@@ -210,10 +325,12 @@ export default function AccountComposeScreen() {
                     Manual account
                   </Text>
                   <Text className="mt-1 text-base font-semibold text-[#f4f7f5]">
-                    No institution needed here
+                    {isCreditCard ? 'Card details stay manual for now' : 'No institution needed here'}
                   </Text>
                   <Text className="mt-2 text-sm leading-6 text-[#7f8c86]">
-                    We are creating a manual account entry for now, so the app does not need a bank connector yet.
+                    {isCreditCard
+                      ? 'Enter the card balance, total limit, available limit, and due day so Penni can track it properly.'
+                      : 'We are creating a manual account entry for now, so the app does not need a bank connector yet.'}
                   </Text>
                 </View>
               </View>
