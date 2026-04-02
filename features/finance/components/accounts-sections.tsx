@@ -70,50 +70,78 @@ export function AccountCard({ account }: { account: Account }) {
   const availableCredit = account.availableCredit ? Number(account.availableCredit) : null;
   const creditLimit = account.creditLimit ? Number(account.creditLimit) : null;
   const dueDayLabel = formatDueDayOfMonth(account.dueDayOfMonth);
-  const creditCardDetails = [
-    availableCredit !== null ? `Available ${formatCurrency(availableCredit, account.currency)}` : null,
-    creditLimit !== null ? `Limit ${formatCurrency(creditLimit, account.currency)}` : null,
-    dueDayLabel ? `Due ${dueDayLabel}` : null,
-  ]
-    .filter(Boolean)
-    .join('  •  ');
 
   return (
-    <View className={`h-[138px] overflow-hidden rounded-[24px] border ${meta.cardClassName ?? 'border-[#17211c] bg-[#131b17]'}`}>
-      <View className={`h-[3px] ${meta.gradientStripClassName ?? 'bg-[#8bff62]'} opacity-40`} />
-
-      <View className="flex-1 justify-between px-4 pb-4 pt-3">
-        <View className="flex-row items-center gap-3">
-          <View className={`size-11 items-center justify-center rounded-full ${meta.iconWrapClassName}`}>
-            <TypeIcon color="#f4f7f5" size={20} />
+    <View className="rounded-[28px] border border-[#1b2a21]/60 bg-[#111916] p-5">
+      <View className="flex-row items-center justify-between">
+        <View className="flex-1 flex-row items-center gap-4">
+          <View
+            className={`size-12 items-center justify-center rounded-2xl ${meta.iconWrapClassName}`}>
+            <TypeIcon color={meta.accentColor} size={24} />
           </View>
           <View className="flex-1">
-            <Text className="text-base font-semibold text-[#f4f7f5]">{account.name}</Text>
-            <View className="mt-1 flex-row items-center gap-2">
-              <Badge
-                label={meta.label}
-                variant="subtle"
-                size="sm"
-                className="bg-[#18221d]"
-                textClassName={meta.accentTextClassName}
-              />
-              <Text className="text-xs text-[#6d786f]">{account.currency}</Text>
-            </View>
-          </View>
-          <View className="items-end">
-            <Text className={`text-lg font-semibold ${Number(account.balance) < 0 ? 'text-[#ff8a94]' : meta.accentTextClassName}`}>
-              {formatCurrency(Number(account.balance), account.currency)}
+            <Text className="text-[17px] font-bold tracking-tight text-[#f4f7f5]" numberOfLines={1}>
+              {account.name}
             </Text>
-            {account.institutionName ? <Text className="mt-0.5 text-xs text-[#6d786f]">{account.institutionName}</Text> : null}
+            <View className="mt-1 flex-row items-center gap-2">
+              <Text className={`text-[12px] font-semibold ${meta.accentTextClassName}`}>
+                {meta.label}
+              </Text>
+              <View className="size-1 rounded-full bg-[#2a3a31]" />
+              <Text className="text-[12px] font-medium text-[#73827a]">{account.currency}</Text>
+            </View>
           </View>
         </View>
 
-        <View className="mt-3 min-h-[32px] border-t border-white/5 pt-3">
-          {isCreditCard && creditCardDetails ? (
-            <Text className="text-[13px] font-medium leading-5 text-[#b6c0bb]">{creditCardDetails}</Text>
+        <View className="items-end">
+          <Text
+            className={`text-xl font-bold tracking-tight ${Number(account.balance) < 0 ? 'text-[#ff8a94]' : 'text-[#f4f7f5]'}`}>
+            {formatCurrency(Number(account.balance), account.currency)}
+          </Text>
+          {account.institutionName ? (
+            <Text className="mt-1 text-[11px] font-medium uppercase tracking-wider text-[#5c6e64]">
+              {account.institutionName}
+            </Text>
           ) : null}
         </View>
       </View>
+
+      {isCreditCard && (availableCredit !== null || creditLimit !== null || dueDayLabel) ? (
+        <View className="mt-4 border-t border-[#1b2a21]/30 pt-4">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center gap-5">
+              {availableCredit !== null ? (
+                <View>
+                  <Text className="text-[9px] font-bold uppercase tracking-widest text-[#5c6e64]">
+                    Available
+                  </Text>
+                  <Text className="mt-0.5 text-[13px] font-bold text-[#f4f7f5]">
+                    {formatCurrency(availableCredit, account.currency)}
+                  </Text>
+                </View>
+              ) : null}
+              {creditLimit !== null ? (
+                <View>
+                  <Text className="text-[9px] font-bold uppercase tracking-widest text-[#5c6e64]">
+                    Limit
+                  </Text>
+                  <Text className="mt-0.5 text-[13px] font-semibold text-[#8d9f95]">
+                    {formatCurrency(creditLimit, account.currency)}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+            {dueDayLabel ? (
+              <View className="items-end">
+                <Text className="text-[9px] font-bold uppercase tracking-widest text-[#5c6e64]">
+                  Due Date
+                </Text>
+                <Text className="mt-0.5 text-[13px] font-bold text-[#ffc857]">{dueDayLabel}</Text>
+              </View>
+            ) : null}
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }

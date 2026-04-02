@@ -31,6 +31,18 @@ export function getProjectedBalanceAfterRecurring(currentBalance: number, items:
   }, currentBalance);
 }
 
+export function getPlannedItemsForRestOfMonth(items: PlannedItem[]) {
+  const today = new Date();
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  endOfMonth.setHours(23, 59, 59, 999);
+
+  return items.filter((item) => {
+    const occurrence = new Date(item.nextOccurrenceAt ?? item.startDate);
+    return occurrence >= startOfToday && occurrence <= endOfMonth;
+  });
+}
+
 export function getNextPlannedItem(items: PlannedItem[], type: PlannedItem['type']) {
   return items
     .filter((item) => item.type === type)

@@ -10,6 +10,7 @@ import {
 import {
   getGreeting,
   getNextPlannedItem,
+  getPlannedItemsForRestOfMonth,
   getProjectedBalanceAfterRecurring,
   getUpcomingTimingLabel,
 } from '@/features/dashboard/lib/home-helpers';
@@ -34,6 +35,10 @@ export default function HomeScreen() {
   const firstName = user?.firstName || 'there';
   const accounts = accountsQuery.data ?? [];
   const allPlannedItems = plannedItemsQuery.data ?? [];
+  const monthScopedPlannedItems = useMemo(
+    () => getPlannedItemsForRestOfMonth(allPlannedItems),
+    [allPlannedItems]
+  );
   const plannedItems = allPlannedItems.slice(0, 5);
   const allTransactions = transactionsQuery.data ?? [];
   const recentTransactions = allTransactions.slice(0, 5);
@@ -41,7 +46,10 @@ export default function HomeScreen() {
   const incomePlannedItems = plannedItems.filter((item) => item.type === 'INCOME');
   const expensePlannedItems = plannedItems.filter((item) => item.type === 'EXPENSE');
   const totalBalance = getNetWorth(accounts);
-  const leftAfterRecurring = getProjectedBalanceAfterRecurring(totalBalance, allPlannedItems);
+  const leftAfterRecurring = getProjectedBalanceAfterRecurring(
+    totalBalance,
+    monthScopedPlannedItems
+  );
   const nextBill = getNextPlannedItem(allPlannedItems, 'EXPENSE');
   const nextIncome = getNextPlannedItem(allPlannedItems, 'INCOME');
 

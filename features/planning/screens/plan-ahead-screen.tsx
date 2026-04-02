@@ -26,12 +26,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 
 const ITEM_TYPES = ['Bill', 'Income'] as const;
-const RECURRING_OPTIONS = ['Weekly', 'Monthly', 'Semi-monthly', 'Quarterly'] as const;
+const RECURRING_OPTIONS = ['Weekly', 'Monthly', 'Semi-monthly', 'Quarterly', 'Yearly'] as const;
 const RECURRENCE_MAP: Record<(typeof RECURRING_OPTIONS)[number], RecurrenceFrequency> = {
   Weekly: 'WEEKLY',
   Monthly: 'MONTHLY',
   'Semi-monthly': 'SEMI_MONTHLY',
   Quarterly: 'QUARTERLY',
+  Yearly: 'YEARLY',
 };
 
 export default function PlanAheadScreen() {

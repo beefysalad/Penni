@@ -13,56 +13,44 @@ export const ACCOUNT_TYPE_META: Record<
     label: string;
     icon: typeof CreditCardIcon;
     iconWrapClassName: string;
-    cardClassName?: string;
     accentTextClassName: string;
     accentColor?: string;
-    gradientStripClassName?: string;
   }
 > = {
   CASH: {
     label: 'Cash',
     icon: BanknoteIcon,
-    iconWrapClassName: 'bg-[#173223]',
-    cardClassName: 'border-[#1a2620] bg-[#111816]',
+    iconWrapClassName: 'bg-[#1a2c1f]',
     accentTextClassName: 'text-[#41d6b2]',
     accentColor: '#41d6b2',
-    gradientStripClassName: 'bg-[#41d6b2]',
   },
   BANK_ACCOUNT: {
     label: 'Debit',
     icon: LandmarkIcon,
     iconWrapClassName: 'bg-[#1a2c1f]',
-    cardClassName: 'border-[#1b2a21] bg-[#121a16]',
     accentTextClassName: 'text-[#8bff62]',
     accentColor: '#8bff62',
-    gradientStripClassName: 'bg-[#8bff62]',
   },
   E_WALLET: {
     label: 'E-wallet',
     icon: SmartphoneIcon,
-    iconWrapClassName: 'bg-[#1a262d]',
-    cardClassName: 'border-[#1b252b] bg-[#12191d]',
+    iconWrapClassName: 'bg-[#16212d]',
     accentTextClassName: 'text-[#5aa9ff]',
     accentColor: '#5aa9ff',
-    gradientStripClassName: 'bg-[#5aa9ff]',
   },
   CREDIT_CARD: {
     label: 'Credit',
     icon: CreditCardIcon,
-    iconWrapClassName: 'bg-[#231b33]',
-    cardClassName: 'border-[#241e2d] bg-[#171320]',
+    iconWrapClassName: 'bg-[#211b2f]',
     accentTextClassName: 'text-[#ffc857]',
     accentColor: '#ffc857',
-    gradientStripClassName: 'bg-[#ffc857]',
   },
   OTHER: {
     label: 'Other',
     icon: Wallet2Icon,
-    iconWrapClassName: 'bg-[#202018]',
-    cardClassName: 'border-[#26261c] bg-[#181814]',
+    iconWrapClassName: 'bg-[#1b1b1b]',
     accentTextClassName: 'text-[#d8ff5b]',
     accentColor: '#d8ff5b',
-    gradientStripClassName: 'bg-[#d8ff5b]',
   },
 };
 
