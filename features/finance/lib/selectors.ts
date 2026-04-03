@@ -61,7 +61,7 @@ export function groupTransactionsIntoSections(transactions: Transaction[]): Tran
 
 export function getSpentForBudget(
   budget: Budget,
-  transactions: Pick<Transaction, 'amount' | 'categoryId' | 'transactionAt' | 'type'>[],
+  transactions: Pick<Transaction, 'amount' | 'categoryId' | 'transactionAt' | 'type' | 'source'>[],
 ) {
   const start = new Date(budget.periodStart);
   const end = new Date(budget.periodEnd);
@@ -69,6 +69,7 @@ export function getSpentForBudget(
   return transactions
     .filter((transaction) => {
       if (transaction.type !== 'EXPENSE') return false;
+      if (transaction.source === 'TRANSFER') return false;
       if (budget.categoryId && transaction.categoryId !== budget.categoryId) return false;
       const date = new Date(transaction.transactionAt);
       return date >= start && date <= end;
@@ -94,8 +95,9 @@ export function buildMonthlyExpenseDistribution(
     return date.getFullYear() === year && date.getMonth() === month;
   });
 
-  const expenseTransactions = monthTransactions.filter((transaction) => transaction.type === 'EXPENSE');
-  const incomeTransactions = monthTransactions.filter((transaction) => transaction.type === 'INCOME');
+  const cashFlowTransactions = monthTransactions.filter((transaction) => transaction.source !== 'TRANSFER');
+  const expenseTransactions = cashFlowTransactions.filter((transaction) => transaction.type === 'EXPENSE');
+  const incomeTransactions = cashFlowTransactions.filter((transaction) => transaction.type === 'INCOME');
 
   const monthExpenses = expenseTransactions.reduce((sum, transaction) => sum + Number(transaction.amount), 0);
   const monthIncome = incomeTransactions.reduce((sum, transaction) => sum + Number(transaction.amount), 0);

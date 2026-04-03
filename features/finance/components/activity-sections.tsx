@@ -184,23 +184,38 @@ export function ActivityTransactionRow({
 }) {
   const isExpense = transaction.type === 'EXPENSE';
   const sign = isExpense ? '-' : '+';
-  const amountColor = isExpense ? 'text-[#ff8a94]' : 'text-[#41d6b2]';
-  const iconBg = isExpense ? 'bg-[#241719]' : 'bg-[#16211b]';
+  const isTransfer = transaction.source === 'TRANSFER';
+  const amountColor = isTransfer ? 'text-[#ffd66b]' : isExpense ? 'text-[#ff8a94]' : 'text-[#41d6b2]';
+  const iconBg = isTransfer ? 'bg-[#2a2412]' : isExpense ? 'bg-[#241719]' : 'bg-[#16211b]';
+  const sourceLabel =
+    transaction.source === 'RECURRING'
+      ? 'Recurring'
+      : transaction.source === 'IMPORTED'
+        ? 'Imported'
+        : transaction.source === 'TRANSFER'
+          ? 'Transfer'
+          : null;
 
   return (
     <View className={`px-4 py-3.5 ${!isLast ? 'border-b border-[#17211c]/60' : ''}`}>
       <View className="flex-row items-center gap-3">
         <View className={`size-11 items-center justify-center rounded-[14px] ${iconBg}`}>
-          {isExpense ? <ArrowDownLeftIcon color="#ff8a94" size={17} /> : <ArrowUpRightIcon color="#41d6b2" size={17} />}
+          {isTransfer ? (
+            <WalletCardsIcon color="#ffd66b" size={17} />
+          ) : isExpense ? (
+            <ArrowDownLeftIcon color="#ff8a94" size={17} />
+          ) : (
+            <ArrowUpRightIcon color="#41d6b2" size={17} />
+          )}
         </View>
 
         <View className="flex-1">
           <Text className="text-[16px] font-semibold text-[#f4f7f5]" numberOfLines={1}>{transaction.title}</Text>
           <View className="mt-1 flex-row items-center gap-2">
             <Text className="text-[13px] text-[#6d786f]">{formatShortDate(transaction.transactionAt)}</Text>
-            {transaction.source !== 'MANUAL' ? (
+            {sourceLabel ? (
               <Badge
-                label={transaction.source === 'RECURRING' ? 'Recurring' : 'Imported'}
+                label={sourceLabel}
                 variant="subtle"
                 size="sm"
                 className="bg-[#18221d]"

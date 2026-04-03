@@ -1,6 +1,6 @@
 export type AccountType = 'CASH' | 'BANK_ACCOUNT' | 'E_WALLET' | 'CREDIT_CARD' | 'OTHER';
 export type CategoryType = 'EXPENSE' | 'INCOME';
-export type TransactionSource = 'MANUAL' | 'RECURRING' | 'IMPORTED';
+export type TransactionSource = 'MANUAL' | 'RECURRING' | 'IMPORTED' | 'TRANSFER';
 export type RecurrenceFrequency = 'WEEKLY' | 'MONTHLY' | 'SEMI_MONTHLY' | 'QUARTERLY' | 'YEARLY';
 
 export type Account = {

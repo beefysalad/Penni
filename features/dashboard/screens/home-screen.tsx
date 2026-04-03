@@ -63,7 +63,7 @@ export default function HomeScreen() {
   const recentIncome = useMemo(
     () =>
       recentTransactions
-        .filter((transaction) => transaction.type === 'INCOME')
+        .filter((transaction) => transaction.type === 'INCOME' && transaction.source !== 'TRANSFER')
         .reduce((sum, transaction) => sum + Number(transaction.amount), 0),
     [recentTransactions]
   );
@@ -71,7 +71,7 @@ export default function HomeScreen() {
   const recentExpense = useMemo(
     () =>
       recentTransactions
-        .filter((transaction) => transaction.type === 'EXPENSE')
+        .filter((transaction) => transaction.type === 'EXPENSE' && transaction.source !== 'TRANSFER')
         .reduce((sum, transaction) => sum + Number(transaction.amount), 0),
     [recentTransactions]
   );
