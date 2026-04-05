@@ -209,9 +209,9 @@ export function ActivityTransactionRow({
           )}
         </View>
 
-        <View className="flex-1">
+        <View className="min-w-0 flex-1">
           <Text className="text-[16px] font-semibold text-[#f4f7f5]" numberOfLines={1}>{transaction.title}</Text>
-          <View className="mt-1 flex-row items-center gap-2">
+          <View className="mt-1 flex-row flex-wrap items-center gap-2">
             <Text className="text-[13px] text-[#6d786f]">{formatShortDate(transaction.transactionAt)}</Text>
             {sourceLabel ? (
               <Badge
@@ -225,7 +225,7 @@ export function ActivityTransactionRow({
           </View>
         </View>
 
-        <Text className={`text-[17px] font-semibold ${amountColor}`}>
+        <Text className={`shrink-0 text-[17px] font-semibold ${amountColor}`}>
           {sign}
           {formatCurrency(Number(transaction.amount), transaction.currency)}
         </Text>

@@ -63,7 +63,13 @@ export function AccountsEmptyState({ filter }: { filter: AccountFilter }) {
   );
 }
 
-export function AccountCard({ account }: { account: Account }) {
+export function AccountCard({
+  account,
+  onPress,
+}: {
+  account: Account;
+  onPress?: () => void;
+}) {
   const meta = ACCOUNT_TYPE_META[account.type];
   const TypeIcon = meta.icon;
   const isCreditCard = account.type === 'CREDIT_CARD';
@@ -72,37 +78,41 @@ export function AccountCard({ account }: { account: Account }) {
   const dueDayLabel = formatDueDayOfMonth(account.dueDayOfMonth);
 
   return (
-    <View className="rounded-[28px] border border-[#1b2a21]/60 bg-[#111916] p-5">
-      <View className="flex-row items-center justify-between">
-        <View className="flex-1 flex-row items-center gap-4">
-          <View
-            className={`size-12 items-center justify-center rounded-2xl ${meta.iconWrapClassName}`}>
-            <TypeIcon color={meta.accentColor} size={24} />
-          </View>
-          <View className="flex-1">
-            <Text className="text-[17px] font-bold tracking-tight text-[#f4f7f5]" numberOfLines={1}>
+    <Pressable
+      accessibilityRole={onPress ? 'button' : undefined}
+      className="rounded-[28px]"
+      disabled={!onPress}
+      onPress={onPress}>
+      <View className="rounded-[28px] border border-[#1b2a21]/60 bg-[#111916] p-5">
+      <View className="flex-row items-center gap-4">
+        <View
+          className={`size-12 shrink-0 items-center justify-center rounded-2xl ${meta.iconWrapClassName}`}>
+          <TypeIcon color={meta.accentColor} size={24} />
+        </View>
+        <View className="flex-1">
+          <View className="flex-row items-start justify-between gap-2">
+            <Text className="flex-1 text-[17px] font-bold tracking-tight text-[#f4f7f5]" numberOfLines={1}>
               {account.name}
             </Text>
-            <View className="mt-1 flex-row items-center gap-2">
+            {account.institutionName ? (
+              <Text className="shrink-0 text-[11px] font-medium uppercase tracking-wider text-[#5c6e64]">
+                {account.institutionName}
+              </Text>
+            ) : null}
+          </View>
+          <View className="mt-1 flex-row items-center justify-between gap-2">
+            <View className="flex-row items-center gap-2">
               <Text className={`text-[12px] font-semibold ${meta.accentTextClassName}`}>
                 {meta.label}
               </Text>
               <View className="size-1 rounded-full bg-[#2a3a31]" />
               <Text className="text-[12px] font-medium text-[#73827a]">{account.currency}</Text>
             </View>
-          </View>
-        </View>
-
-        <View className="items-end">
-          <Text
-            className={`text-xl font-bold tracking-tight ${Number(account.balance) < 0 ? 'text-[#ff8a94]' : 'text-[#f4f7f5]'}`}>
-            {formatCurrency(Number(account.balance), account.currency)}
-          </Text>
-          {account.institutionName ? (
-            <Text className="mt-1 text-[11px] font-medium uppercase tracking-wider text-[#5c6e64]">
-              {account.institutionName}
+            <Text
+              className={`shrink-0 text-[16px] font-bold tracking-tight ${Number(account.balance) < 0 ? 'text-[#ff8a94]' : 'text-[#f4f7f5]'}`}>
+              {formatCurrency(Number(account.balance), account.currency)}
             </Text>
-          ) : null}
+          </View>
         </View>
       </View>
 
@@ -142,7 +152,8 @@ export function AccountCard({ account }: { account: Account }) {
           </View>
         </View>
       ) : null}
-    </View>
+      </View>
+    </Pressable>
   );
 }
 

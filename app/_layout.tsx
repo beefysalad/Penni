@@ -82,6 +82,7 @@ function Routes() {
         <Stack.Screen name="(settings)/personal-details" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(settings)/preferences" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(settings)/connected-accounts" options={DETAIL_SCREEN_OPTIONS} />
+        <Stack.Screen name="(settings)/account-details" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(settings)/categories" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(settings)/budgets" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(settings)/recurring" options={DETAIL_SCREEN_OPTIONS} />

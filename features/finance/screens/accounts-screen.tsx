@@ -218,7 +218,15 @@ export default function AccountsScreen() {
                       onDelete={async () => {
                         await deleteAccountMutation.mutateAsync(account.id);
                       }}>
-                      <AccountCard account={account} />
+                      <AccountCard
+                        account={account}
+                        onPress={() =>
+                          router.push({
+                            pathname: '/account-details',
+                            params: { id: account.id },
+                          })
+                        }
+                      />
                     </AccountSwipeableRow>
                   ))
                 : null}

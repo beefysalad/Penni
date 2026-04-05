@@ -29,6 +29,7 @@ export default function TransactionComposeScreen() {
   const [note, setNote] = useState('');
   const [transactionDate, setTransactionDate] = useState(() => new Date());
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [balanceError, setBalanceError] = useState<string | null>(null);
   const {
     selectedAccountId,
     setSelectedAccountId,
@@ -75,6 +76,7 @@ export default function TransactionComposeScreen() {
 
   const selectedAccount = accounts.find((account) => account.id === selectedAccountId) ?? null;
   const quickCategories = useMemo(() => categories.slice(0, 4), [categories]);
+  const numericAmount = Number.parseFloat(amount);
 
   const handleDateChange = (event: DateTimePickerEvent, nextDate?: Date) => {
     if (Platform.OS !== 'ios') {
@@ -91,6 +93,24 @@ export default function TransactionComposeScreen() {
   const canSave = Boolean(selectedAccountId && selectedCategoryId && amount.trim());
 
   const handleSaveTransaction = async () => {
+    if (mode === 'Expense' && selectedAccount && Number.isFinite(numericAmount) && numericAmount > 0) {
+      if (selectedAccount.type === 'CREDIT_CARD') {
+        const availableCredit = Number(selectedAccount.availableCredit ?? 0);
+
+        if (numericAmount > availableCredit) {
+          setBalanceError("Charge exceeds the card's available credit.");
+          return;
+        }
+      } else {
+        const availableBalance = Number(selectedAccount.balance ?? 0);
+
+        if (numericAmount > availableBalance) {
+          setBalanceError("Amount exceeds the account's available balance.");
+          return;
+        }
+      }
+    }
+
     const parsed = createTransactionSchema.safeParse({
       accountId: selectedAccountId ?? '',
       categoryId: selectedCategoryId ?? '',
@@ -106,6 +126,8 @@ export default function TransactionComposeScreen() {
       return;
     }
 
+    setBalanceError(null);
+
     await createTransactionMutation.mutateAsync({
       accountId: parsed.data.accountId,
       categoryId: parsed.data.categoryId,
@@ -120,9 +142,16 @@ export default function TransactionComposeScreen() {
     setAmount('');
     setNote('');
     setTransactionDate(new Date());
+    setBalanceError(null);
     resetCompose();
     router.back();
   };
+
+  useEffect(() => {
+    if (balanceError) {
+      setBalanceError(null);
+    }
+  }, [amount, balanceError, mode, selectedAccountId]);
 
   return (
     <KeyboardAvoidingView
@@ -194,6 +223,12 @@ export default function TransactionComposeScreen() {
                     style={CENTERED_INPUT_STYLE}
                   />
                 </View>
+
+                {balanceError ? (
+                  <Text className="mt-4 text-center text-[13px] font-medium text-[#ff8a94]">
+                    {balanceError}
+                  </Text>
+                ) : null}
               </View>
             </View>
 
@@ -237,6 +272,39 @@ export default function TransactionComposeScreen() {
                         </Pressable>
                       </View>
                     </View>
+
+                    {mode === 'Expense' ? (
+                      <View className="mt-4 flex-row flex-wrap gap-2">
+                        {selectedAccount.type === 'CREDIT_CARD' ? (
+                          <>
+                            <Badge
+                              label={`Available ${selectedAccount.currency} ${selectedAccount.availableCredit ?? '0'}`}
+                              variant="subtle"
+                              size="sm"
+                              className="bg-[#18221d]"
+                              textClassName="text-[#93a19a]"
+                            />
+                            {selectedAccount.creditLimit ? (
+                              <Badge
+                                label={`Limit ${selectedAccount.currency} ${selectedAccount.creditLimit}`}
+                                variant="subtle"
+                                size="sm"
+                                className="bg-[#18221d]"
+                                textClassName="text-[#93a19a]"
+                              />
+                            ) : null}
+                          </>
+                        ) : (
+                          <Badge
+                            label={`Available ${selectedAccount.currency} ${selectedAccount.balance}`}
+                            variant="subtle"
+                            size="sm"
+                            className="bg-[#18221d]"
+                            textClassName="text-[#93a19a]"
+                          />
+                        )}
+                      </View>
+                    ) : null}
                   </View>
                 ) : null}
 
