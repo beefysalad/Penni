@@ -80,7 +80,6 @@ function Routes() {
         <Stack.Screen name="(tabs)/stats" options={APP_SCREEN_OPTIONS} />
         <Stack.Screen name="(tabs)/settings" options={APP_SCREEN_OPTIONS} />
         <Stack.Screen name="(settings)/personal-details" options={DETAIL_SCREEN_OPTIONS} />
-        <Stack.Screen name="(settings)/preferences" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(settings)/feedback" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(settings)/connected-accounts" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(settings)/account-details" options={DETAIL_SCREEN_OPTIONS} />

@@ -3,7 +3,6 @@ import {
   CreditCardIcon,
   GoalIcon,
   MessageSquareIcon,
-  Settings2Icon,
   ShapesIcon,
   UserRoundIcon,
 } from 'lucide-react-native';
@@ -62,14 +61,6 @@ export const APP_ITEMS = [
     iconBg: 'bg-[#16231b]',
     iconColor: '#8bff62',
     href: '/ai-chat' as const,
-  },
-  {
-    label: 'Preferences',
-    description: 'Currency, appearance, and defaults',
-    icon: Settings2Icon,
-    iconBg: 'bg-[#18221d]',
-    iconColor: '#41d6b2',
-    href: '/preferences' as const,
   },
   {
     label: 'Send feedback',
