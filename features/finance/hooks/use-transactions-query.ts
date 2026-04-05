@@ -1,9 +1,11 @@
 import { useAuthenticatedRequest } from '@/features/auth/lib/use-authenticated-request';
 import {
+  createTransfer,
   createTransaction,
   deleteTransaction,
   listTransactions,
   type CreateTransactionInput,
+  type CreateTransferInput,
   type ListTransactionsParams,
   type PaginatedTransactionsResponse,
 } from '@/features/finance/api/transactions.api';
@@ -59,6 +61,20 @@ export function useCreateTransactionMutation() {
       authenticatedRequest((token) => createTransaction(token, input)),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    },
+  });
+}
+
+export function useCreateTransferMutation() {
+  const authenticatedRequest = useAuthenticatedRequest();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: CreateTransferInput) =>
+      authenticatedRequest((token) => createTransfer(token, input)),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      await queryClient.invalidateQueries({ queryKey: ['accounts'] });
     },
   });
 }

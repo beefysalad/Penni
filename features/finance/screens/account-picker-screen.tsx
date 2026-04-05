@@ -5,15 +5,23 @@ import { useAccountsQuery } from '@/features/finance/hooks/use-accounts-query';
 import { ACCOUNT_TYPE_META } from '@/features/finance/lib/constants';
 import { useTransactionCompose } from '@/features/finance/lib/transaction-compose-context';
 import { StatusBar } from 'expo-status-bar';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Wallet2Icon } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 
 export default function AccountPickerScreen() {
   const accountsQuery = useAccountsQuery();
-  const { selectedAccountId, setSelectedAccountId } = useTransactionCompose();
+  const params = useLocalSearchParams<{ target?: string }>();
+  const {
+    selectedAccountId,
+    setSelectedAccountId,
+    selectedToAccountId,
+    setSelectedToAccountId,
+  } = useTransactionCompose();
   const [search, setSearch] = useState('');
+  const isDestinationPicker = params.target === 'destination';
+  const selectedId = isDestinationPicker ? selectedToAccountId : selectedAccountId;
 
   const filteredAccounts = useMemo(() => {
     const accounts = accountsQuery.data ?? [];
@@ -60,7 +68,7 @@ export default function AccountPickerScreen() {
 
             <View className="gap-3">
               {filteredAccounts.map((account) => {
-                const isSelected = account.id === selectedAccountId;
+                const isSelected = account.id === selectedId;
 
                 return (
                   <Pressable
@@ -69,7 +77,11 @@ export default function AccountPickerScreen() {
                       isSelected ? 'border-[#52d776] bg-[#111c16]' : 'border-[#17211c] bg-[#131b17]'
                     }`}
                     onPress={() => {
-                      setSelectedAccountId(account.id);
+                      if (isDestinationPicker) {
+                        setSelectedToAccountId(account.id);
+                      } else {
+                        setSelectedAccountId(account.id);
+                      }
                       router.back();
                     }}>
                     <View className="flex-row items-center justify-between gap-3">

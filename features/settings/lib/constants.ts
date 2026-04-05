@@ -2,6 +2,7 @@ import {
   BotIcon,
   CreditCardIcon,
   GoalIcon,
+  MessageSquareIcon,
   Settings2Icon,
   ShapesIcon,
   UserRoundIcon,
@@ -69,6 +70,14 @@ export const APP_ITEMS = [
     iconBg: 'bg-[#18221d]',
     iconColor: '#41d6b2',
     href: '/preferences' as const,
+  },
+  {
+    label: 'Send feedback',
+    description: 'Report a bug or suggest a feature',
+    icon: MessageSquareIcon,
+    iconBg: 'bg-[#1e1c2e]',
+    iconColor: '#a084ff',
+    href: '/feedback' as const,
   },
 ] as const;
 

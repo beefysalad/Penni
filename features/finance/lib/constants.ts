@@ -60,7 +60,7 @@ export type AccountFilter = (typeof ACCOUNT_FILTERS)[number];
 export const TYPE_FILTERS = ['All', 'Expenses', 'Income'] as const;
 export type TypeFilter = (typeof TYPE_FILTERS)[number];
 
-export const TRANSACTION_MODES = ['Expense', 'Income'] as const;
+export const TRANSACTION_MODES = ['Expense', 'Income', 'Transfer'] as const;
 
 export const ACCOUNT_TYPE_OPTIONS = [
   { label: 'Cash', value: 'CASH' },

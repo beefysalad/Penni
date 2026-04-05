@@ -10,7 +10,10 @@ import { Text } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 import { useAccountsQuery } from '@/features/finance/hooks/use-accounts-query';
 import { useCategoriesQuery } from '@/features/finance/hooks/use-categories-query';
-import { useCreateTransactionMutation } from '@/features/finance/hooks/use-transactions-query';
+import {
+  useCreateTransactionMutation,
+  useCreateTransferMutation,
+} from '@/features/finance/hooks/use-transactions-query';
 import { ACCOUNT_TYPE_META, TRANSACTION_MODES } from '@/features/finance/lib/constants';
 import { useTransactionCompose } from '@/features/finance/lib/transaction-compose-context';
 import { createTransactionSchema } from '@/features/finance/lib/finance.schemas';
@@ -33,11 +36,14 @@ export default function TransactionComposeScreen() {
   const {
     selectedAccountId,
     setSelectedAccountId,
+    selectedToAccountId,
+    setSelectedToAccountId,
     selectedCategoryId,
     setSelectedCategoryId,
     resetCompose,
   } = useTransactionCompose();
   const createTransactionMutation = useCreateTransactionMutation();
+  const createTransferMutation = useCreateTransferMutation();
   const formattedDateLabel = useMemo(
     () =>
       new Intl.DateTimeFormat('en-PH', {
@@ -54,6 +60,7 @@ export default function TransactionComposeScreen() {
 
   const accounts = accountsQuery.data ?? [];
   const categories = categoriesQuery.data ?? [];
+  const isTransfer = mode === 'Transfer';
 
   useEffect(() => {
     if (!selectedAccountId && accounts.length > 0) {
@@ -62,10 +69,31 @@ export default function TransactionComposeScreen() {
   }, [accounts, selectedAccountId, setSelectedAccountId]);
 
   useEffect(() => {
+    if (mode !== 'Transfer') {
+      return;
+    }
+
+    if (!selectedToAccountId && accounts.length > 1) {
+      const fallback = accounts.find((account) => account.id !== selectedAccountId);
+      setSelectedToAccountId(fallback?.id ?? null);
+      return;
+    }
+
+    if (selectedToAccountId === selectedAccountId) {
+      const fallback = accounts.find((account) => account.id !== selectedAccountId);
+      setSelectedToAccountId(fallback?.id ?? null);
+    }
+  }, [accounts, mode, selectedAccountId, selectedToAccountId, setSelectedToAccountId]);
+
+  useEffect(() => {
+    if (mode === 'Transfer') {
+      return;
+    }
+
     if (!selectedCategoryId || !categories.some((category) => category.id === selectedCategoryId)) {
       setSelectedCategoryId(categories[0]?.id ?? null);
     }
-  }, [categories, selectedCategoryId, setSelectedCategoryId]);
+  }, [categories, mode, selectedCategoryId, setSelectedCategoryId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -75,6 +103,7 @@ export default function TransactionComposeScreen() {
   );
 
   const selectedAccount = accounts.find((account) => account.id === selectedAccountId) ?? null;
+  const selectedToAccount = accounts.find((account) => account.id === selectedToAccountId) ?? null;
   const quickCategories = useMemo(() => categories.slice(0, 4), [categories]);
   const numericAmount = Number.parseFloat(amount);
 
@@ -90,9 +119,58 @@ export default function TransactionComposeScreen() {
     setTransactionDate(nextDate);
   };
 
-  const canSave = Boolean(selectedAccountId && selectedCategoryId && amount.trim());
+  const canSave = isTransfer
+    ? Boolean(selectedAccountId && selectedToAccountId && amount.trim())
+    : Boolean(selectedAccountId && selectedCategoryId && amount.trim());
 
   const handleSaveTransaction = async () => {
+    if (isTransfer) {
+      if (!selectedAccount || !selectedToAccount || !Number.isFinite(numericAmount) || numericAmount <= 0) {
+        return;
+      }
+
+      if (selectedAccount.id === selectedToAccount.id) {
+        setBalanceError('Choose a different destination account.');
+        return;
+      }
+
+      if (selectedAccount.type === 'CREDIT_CARD') {
+        setBalanceError('Transfers from credit cards are not supported yet.');
+        return;
+      }
+
+      if (selectedAccount.currency !== selectedToAccount.currency) {
+        setBalanceError('Transfers currently require matching account currencies.');
+        return;
+      }
+
+      const availableBalance = Number(selectedAccount.balance ?? 0);
+
+      if (numericAmount > availableBalance) {
+        setBalanceError("Amount exceeds the account's available balance.");
+        return;
+      }
+
+      setBalanceError(null);
+
+      await createTransferMutation.mutateAsync({
+        fromAccountId: selectedAccount.id,
+        toAccountId: selectedToAccount.id,
+        title: note.trim() || `Transfer from ${selectedAccount.name}`,
+        notes: note.trim() || undefined,
+        amount: amount.trim(),
+        transactionAt: transactionDate.toISOString(),
+      });
+
+      setAmount('');
+      setNote('');
+      setTransactionDate(new Date());
+      setBalanceError(null);
+      resetCompose();
+      router.back();
+      return;
+    }
+
     if (mode === 'Expense' && selectedAccount && Number.isFinite(numericAmount) && numericAmount > 0) {
       if (selectedAccount.type === 'CREDIT_CARD') {
         const availableCredit = Number(selectedAccount.availableCredit ?? 0);
@@ -148,10 +226,8 @@ export default function TransactionComposeScreen() {
   };
 
   useEffect(() => {
-    if (balanceError) {
-      setBalanceError(null);
-    }
-  }, [amount, balanceError, mode, selectedAccountId]);
+    setBalanceError(null);
+  }, [amount, mode, selectedAccountId, selectedToAccountId]);
 
   return (
     <KeyboardAvoidingView
@@ -197,7 +273,13 @@ export default function TransactionComposeScreen() {
                   Amount
                 </Text>
                 <View className="mt-4 flex-row items-end justify-center">
-                  <Text className="mb-3 mr-1 text-[34px] font-medium text-[#6e7f75]">₱</Text>
+                  <Text className="mb-3 mr-1 text-[34px] font-medium text-[#6e7f75]">
+                    {selectedAccount?.currency === 'USD'
+                      ? '$'
+                      : selectedAccount?.currency === 'SGD'
+                        ? 'S$'
+                        : '₱'}
+                  </Text>
                   <TextInput
                     value={amount}
                     onChangeText={setAmount}
@@ -215,6 +297,7 @@ export default function TransactionComposeScreen() {
                     value={note}
                     onChangeText={setNote}
                     placeholder="What was this for?"
+                    // Keep this generic so it works for transfer notes too.
                     placeholderTextColor="#7f8d85"
                     autoCorrect={false}
                     spellCheck={false}
@@ -232,7 +315,7 @@ export default function TransactionComposeScreen() {
               </View>
             </View>
 
-            <SectionHeader title="Account" />
+            <SectionHeader title={isTransfer ? 'From account' : 'Account'} />
             {accountsQuery.isLoading ? (
               <Text className="text-sm text-[#7f8c86]">Loading accounts...</Text>
             ) : null}
@@ -273,7 +356,7 @@ export default function TransactionComposeScreen() {
                       </View>
                     </View>
 
-                    {mode === 'Expense' ? (
+                    {mode === 'Expense' || isTransfer ? (
                       <View className="mt-4 flex-row flex-wrap gap-2">
                         {selectedAccount.type === 'CREDIT_CARD' ? (
                           <>
@@ -331,62 +414,127 @@ export default function TransactionComposeScreen() {
               </View>
             )}
 
-            <View className="flex-row items-center justify-between">
-              <Text className="text-[12px] font-semibold uppercase tracking-[2.6px] text-[#6f7d74]">
-                Category
-              </Text>
-              <Pill
-                label="Browse all"
-                variant="subtle"
-                size="md"
-                className="px-3 py-1.5"
-                onPress={() =>
-                  router.push({
-                    pathname: '/category-picker',
-                    params: { type: categoryType },
-                  })
-                }
-              />
-            </View>
-            {categoriesQuery.isLoading ? (
-              <Text className="text-sm text-[#7f8c86]">Loading categories...</Text>
-            ) : null}
-            <View className="flex-row flex-wrap gap-2.5">
-              {quickCategories.map((category) => {
-                const isSelected = category.id === selectedCategoryId;
-
-                return (
+            {isTransfer ? (
+              <>
+                <SectionHeader title="To account" />
+                {selectedToAccount ? (
+                  <View className="rounded-[22px] border border-[#52d776] bg-[#111c16] p-4">
+                    <View className="flex-row items-center justify-between gap-3">
+                      <View className="flex-row items-center gap-3">
+                        <View
+                          className={`size-11 items-center justify-center rounded-2xl ${ACCOUNT_TYPE_META[selectedToAccount.type].iconWrapClassName}`}>
+                          <Wallet2Icon color="#8bff62" size={18} />
+                        </View>
+                        <View>
+                          <Text className="text-[17px] font-semibold text-[#f4f7f5]">
+                            {selectedToAccount.name}
+                          </Text>
+                          <View className="mt-1 flex-row items-center gap-2">
+                            <Text
+                              className={`text-sm font-semibold ${ACCOUNT_TYPE_META[selectedToAccount.type].accentTextClassName}`}>
+                              {ACCOUNT_TYPE_META[selectedToAccount.type].label}
+                            </Text>
+                            <Text className="text-sm text-[#8d9a92]">
+                              {selectedToAccount.currency} {selectedToAccount.balance}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                      <Pressable
+                        onPress={() =>
+                          router.push({
+                            pathname: '/account-picker',
+                            params: { target: 'destination' },
+                          })
+                        }>
+                        <Text className="text-sm font-semibold text-[#8bff62]">Change</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                ) : (
+                  <View className="rounded-[24px] border border-dashed border-[#26402f] bg-[#0f1512] p-4">
+                    <Text className="text-sm leading-6 text-[#7f8c86]">
+                      Choose where this transfer should land.
+                    </Text>
+                    <Button
+                      className="mt-4 h-12 self-start rounded-full bg-[#8bff62] px-5"
+                      variant="ghost"
+                      size="sm"
+                      onPress={() =>
+                        router.push({
+                          pathname: '/account-picker',
+                          params: { target: 'destination' },
+                        })
+                      }>
+                      <Text className="text-sm font-semibold text-[#07110a]">
+                        Select destination
+                      </Text>
+                    </Button>
+                  </View>
+                )}
+              </>
+            ) : (
+              <>
+                <View className="flex-row items-center justify-between">
+                  <Text className="text-[12px] font-semibold uppercase tracking-[2.6px] text-[#6f7d74]">
+                    Category
+                  </Text>
                   <Pill
-                    key={category.id}
-                    label={category.name}
-                    variant={isSelected ? 'selected' : 'default'}
+                    label="Browse all"
+                    variant="subtle"
                     size="md"
-                    className={cn(
-                      'min-h-11 px-4',
-                      isSelected
-                        ? 'border-[#8bff62] bg-[#1a2b20] shadow-sm shadow-[#8bff62]/10'
-                        : 'bg-[#0f1512]',
-                    )}
-                    onPress={() => setSelectedCategoryId(category.id)}
-                    textStyle={{ color: isSelected ? '#8bff62' : category.colorHex ?? '#dce2de' }}
+                    className="px-3 py-1.5"
+                    onPress={() =>
+                      router.push({
+                        pathname: '/category-picker',
+                        params: { type: categoryType },
+                      })
+                    }
                   />
-                );
-              })}
-            </View>
-            {categories.length > 4 ? (
-              <Pill
-                label={`Browse all ${categories.length} categories`}
-                variant="subtle"
-                size="md"
-                className="self-start"
-                onPress={() =>
-                  router.push({
-                    pathname: '/category-picker',
-                    params: { type: categoryType },
-                  })
-                }
-              />
-            ) : null}
+                </View>
+                {categoriesQuery.isLoading ? (
+                  <Text className="text-sm text-[#7f8c86]">Loading categories...</Text>
+                ) : null}
+                <View className="flex-row flex-wrap gap-2.5">
+                  {quickCategories.map((category) => {
+                    const isSelected = category.id === selectedCategoryId;
+
+                    return (
+                      <Pill
+                        key={category.id}
+                        label={category.name}
+                        variant={isSelected ? 'selected' : 'default'}
+                        size="md"
+                        className={cn(
+                          'min-h-11 px-4',
+                          isSelected
+                            ? 'border-[#8bff62] bg-[#1a2b20] shadow-sm shadow-[#8bff62]/10'
+                            : 'bg-[#0f1512]',
+                        )}
+                        onPress={() => setSelectedCategoryId(category.id)}
+                        textStyle={{
+                          color: isSelected ? '#8bff62' : category.colorHex ?? '#dce2de',
+                        }}
+                      />
+                    );
+                  })}
+                </View>
+                {categories.length > 4 ? (
+                  <Pill
+                    label={`Browse all ${categories.length} categories`}
+                    variant="subtle"
+                    size="md"
+                    className="self-start"
+                    onPress={() =>
+                      router.push({
+                        pathname: '/category-picker',
+                        params: { type: categoryType },
+                      })
+                    }
+                  />
+                ) : null}
+              </>
+            )}
 
             <View className="rounded-[22px] border border-[#17211c] bg-[#0f1512] px-4 py-4">
               <View className="flex-row items-center justify-between">
@@ -427,22 +575,33 @@ export default function TransactionComposeScreen() {
               ) : null}
             </View>
 
-            {createTransactionMutation.isError ? (
+            {createTransactionMutation.isError && !isTransfer ? (
               <Text className="text-sm text-[#ff8a94]">
                 {createTransactionMutation.error instanceof Error
                   ? createTransactionMutation.error.message
                   : 'Failed to save transaction.'}
               </Text>
             ) : null}
+            {createTransferMutation.isError && isTransfer ? (
+              <Text className="text-sm text-[#ff8a94]">
+                {createTransferMutation.error instanceof Error
+                  ? createTransferMutation.error.message
+                  : 'Failed to save transfer.'}
+              </Text>
+            ) : null}
 
             <Button
               className="h-14 rounded-[22px] bg-[#8bff62]"
               onPress={handleSaveTransaction}
-              disabled={!canSave || createTransactionMutation.isPending}>
+              disabled={!canSave || createTransactionMutation.isPending || createTransferMutation.isPending}>
               <Text className="text-base font-semibold text-[#07110a]">
-                {createTransactionMutation.isPending
-                  ? `Saving ${mode.toLowerCase()}...`
-                  : `Save ${mode.toLowerCase()}`}
+                {isTransfer
+                  ? createTransferMutation.isPending
+                    ? 'Saving transfer...'
+                    : 'Save transfer'
+                  : createTransactionMutation.isPending
+                    ? `Saving ${mode.toLowerCase()}...`
+                    : `Save ${mode.toLowerCase()}`}
               </Text>
             </Button>
           </ScrollView>
