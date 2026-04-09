@@ -28,7 +28,7 @@ import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
 import { CalendarIcon, ChevronDownIcon, Wallet2Icon } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 
 export default function TransactionComposeScreen() {
   const [mode, setMode] = useState<(typeof TRANSACTION_MODES)[number]>('Expense');
@@ -565,24 +565,17 @@ export default function TransactionComposeScreen() {
                 </Pressable>
               </View>
 
-              {isDatePickerOpen ? (
+              {isDatePickerOpen && Platform.OS !== 'ios' ? (
                 <View className="mt-4 rounded-[20px] bg-[#131b17] p-3">
                   <DateTimePicker
                     value={transactionDate}
                     mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    display="default"
                     onChange={handleDateChange}
                     maximumDate={new Date(2100, 11, 31)}
                     themeVariant="dark"
                     textColor="#f4f7f5"
                   />
-                  {Platform.OS === 'ios' ? (
-                    <Pressable
-                      className="mt-3 self-end rounded-full bg-[#8bff62] px-4 py-2"
-                      onPress={() => setIsDatePickerOpen(false)}>
-                      <Text className="text-sm font-semibold text-[#07110a]">Done</Text>
-                    </Pressable>
-                  ) : null}
                 </View>
               ) : null}
             </View>
@@ -619,6 +612,43 @@ export default function TransactionComposeScreen() {
           </ScrollView>
         </View>
       </View>
+
+      {Platform.OS === 'ios' ? (
+        <Modal
+          animationType="fade"
+          transparent
+          visible={isDatePickerOpen}
+          onRequestClose={() => setIsDatePickerOpen(false)}>
+          <View className="flex-1 justify-end bg-black/60 px-4 pb-6">
+            <Pressable className="flex-1" onPress={() => setIsDatePickerOpen(false)} />
+            <View className="rounded-[28px] border border-[#1b2a21] bg-[#0f1512] p-4">
+              <View className="mb-3 flex-row items-center justify-between">
+                <Text className="text-[11px] font-semibold uppercase tracking-[2px] text-[#8bff62]">
+                  Transaction date
+                </Text>
+                <Pressable
+                  className="rounded-full border border-[#1b2a21] bg-[#131b17] px-4 py-2"
+                  onPress={() => setIsDatePickerOpen(false)}>
+                  <Text className="text-sm font-semibold text-[#f4f7f5]">Done</Text>
+                </Pressable>
+              </View>
+
+              <View className="rounded-[22px] bg-[#131b17] px-2 py-2">
+                <DateTimePicker
+                  value={transactionDate}
+                  mode="date"
+                  display="spinner"
+                  onChange={handleDateChange}
+                  maximumDate={new Date(2100, 11, 31)}
+                  themeVariant="dark"
+                  textColor="#f4f7f5"
+                  accentColor="#8bff62"
+                />
+              </View>
+            </View>
+          </View>
+        </Modal>
+      ) : null}
     </KeyboardAvoidingView>
   );
 }

@@ -5,20 +5,24 @@ import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useCreateDebtMutation } from '@/features/finance/hooks/use-debts-query';
 import type { DebtDirection } from '@/features/finance/lib/finance.types';
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { StatusBar } from 'expo-status-bar';
 import { router, useLocalSearchParams } from 'expo-router';
-import { HandCoinsIcon } from 'lucide-react-native';
+import { CalendarIcon, HandCoinsIcon } from 'lucide-react-native';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import {
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
   TextInput,
+  TouchableOpacity,
   View,
 } from 'react-native';
+import { useMemo, useState } from 'react';
 
 const debtSchema = z.object({
   direction: z.enum(['I_OWE', 'OWED_TO_ME']),
@@ -39,6 +43,7 @@ type DebtFormValues = z.infer<typeof debtSchema>;
 export default function DebtComposeScreen() {
   const params = useLocalSearchParams<{ direction?: string }>();
   const createDebtMutation = useCreateDebtMutation();
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const initialDirection: DebtDirection =
     params.direction === 'OWED_TO_ME' ? 'OWED_TO_ME' : 'I_OWE';
 
@@ -61,6 +66,39 @@ export default function DebtComposeScreen() {
   });
 
   const direction = useWatch({ control, name: 'direction' });
+  const dueDate = useWatch({ control, name: 'dueDate' });
+  const formattedDueDateLabel = useMemo(() => {
+    if (!dueDate) return 'Optional';
+
+    const parsedDate = new Date(dueDate);
+    if (Number.isNaN(parsedDate.getTime())) return 'Optional';
+
+    return new Intl.DateTimeFormat('en-PH', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }).format(parsedDate);
+  }, [dueDate]);
+
+  const handleDueDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (Platform.OS !== 'ios') {
+      setIsDatePickerOpen(false);
+    }
+
+    if (event.type === 'dismissed') {
+      return;
+    }
+
+    setValue(
+      'dueDate',
+      selectedDate ? selectedDate.toISOString() : '',
+      {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      },
+    );
+  };
 
   const onSubmit = handleSubmit(async (values) => {
     await createDebtMutation.mutateAsync({
@@ -232,22 +270,47 @@ export default function DebtComposeScreen() {
                     <Controller
                       control={control}
                       name="dueDate"
-                      render={({ field }) => (
+                      render={() => (
                         <Field label="Due date" error={errors.dueDate?.message}>
-                          <TextInput
-                            value={field.value ?? ''}
-                            onBlur={field.onBlur}
-                            onChangeText={field.onChange}
-                            placeholder="Optional"
-                            placeholderTextColor="#536159"
-                            className="h-14 rounded-[18px] border border-[#17211c] bg-[#131b17] px-4 text-[16px] font-semibold text-[#f4f7f5]"
-                            style={CENTERED_INPUT_STYLE}
-                          />
+                          <TouchableOpacity
+                            activeOpacity={0.85}
+                            className="h-14 flex-row items-center justify-between rounded-[18px] border border-[#17211c] bg-[#131b17] px-4"
+                            onPress={() => setIsDatePickerOpen(true)}>
+                            <Text className={`text-[16px] font-semibold ${dueDate ? 'text-[#f4f7f5]' : 'text-[#536159]'}`}>
+                              {formattedDueDateLabel}
+                            </Text>
+                            <CalendarIcon color="#7f8d85" size={18} />
+                          </TouchableOpacity>
                         </Field>
                       )}
                     />
                   </View>
                 </View>
+
+                {isDatePickerOpen && Platform.OS !== 'ios' ? (
+                  <View className="rounded-[20px] border border-[#17211c] bg-[#131b17] px-4 py-2">
+                    <DateTimePicker
+                      value={dueDate ? new Date(dueDate) : new Date()}
+                      mode="date"
+                      display="default"
+                      onChange={handleDueDateChange}
+                    />
+                    {dueDate ? (
+                      <Button
+                        variant="secondary"
+                        className="mt-2 h-10 self-end rounded-full"
+                        onPress={() =>
+                          setValue('dueDate', '', {
+                            shouldDirty: true,
+                            shouldTouch: true,
+                            shouldValidate: true,
+                          })
+                        }>
+                        <Text className="text-sm font-semibold text-[#f4f7f5]">Clear</Text>
+                      </Button>
+                    ) : null}
+                  </View>
+                ) : null}
 
                 <Controller
                   control={control}
@@ -295,6 +358,59 @@ export default function DebtComposeScreen() {
           </ScrollView>
         </View>
       </View>
+
+      {Platform.OS === 'ios' ? (
+        <Modal
+          animationType="fade"
+          transparent
+          visible={isDatePickerOpen}
+          onRequestClose={() => setIsDatePickerOpen(false)}>
+          <View className="flex-1 justify-end bg-black/60 px-4 pb-6">
+            <Pressable className="flex-1" onPress={() => setIsDatePickerOpen(false)} />
+            <View className="rounded-[28px] border border-[#1b2a21] bg-[#0f1512] p-4">
+              <View className="mb-3 flex-row items-center justify-between">
+                <Text className="text-[11px] font-semibold uppercase tracking-[2px] text-[#8bff62]">
+                  Due date
+                </Text>
+                <View className="flex-row gap-2">
+                  {dueDate ? (
+                    <Button
+                      variant="secondary"
+                      className="h-10 rounded-full"
+                      onPress={() =>
+                        setValue('dueDate', '', {
+                          shouldDirty: true,
+                          shouldTouch: true,
+                          shouldValidate: true,
+                        })
+                      }>
+                      <Text className="text-sm font-semibold text-[#f4f7f5]">Clear</Text>
+                    </Button>
+                  ) : null}
+                  <Button
+                    variant="secondary"
+                    className="h-10 rounded-full"
+                    onPress={() => setIsDatePickerOpen(false)}>
+                    <Text className="text-sm font-semibold text-[#f4f7f5]">Done</Text>
+                  </Button>
+                </View>
+              </View>
+
+              <View className="rounded-[22px] bg-[#131b17] px-2 py-2">
+                <DateTimePicker
+                  value={dueDate ? new Date(dueDate) : new Date()}
+                  mode="date"
+                  display="spinner"
+                  themeVariant="dark"
+                  textColor="#f4f7f5"
+                  accentColor="#8bff62"
+                  onChange={handleDueDateChange}
+                />
+              </View>
+            </View>
+          </View>
+        </Modal>
+      ) : null}
     </KeyboardAvoidingView>
   );
 }

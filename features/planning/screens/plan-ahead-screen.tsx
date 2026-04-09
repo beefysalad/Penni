@@ -23,7 +23,7 @@ import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
 import { CalendarDaysIcon, CheckIcon, ChevronDownIcon, Wallet2Icon, WalletCardsIcon, XIcon } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { Modal, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 
 const ITEM_TYPES = ['Bill', 'Income'] as const;
 const RECURRING_OPTIONS = ['Weekly', 'Monthly', 'Semi-monthly', 'Quarterly', 'Yearly'] as const;
@@ -374,29 +374,18 @@ export default function PlanAheadScreen() {
                 </View>
               ) : null}
 
-              {showDatePicker ? (
+              {showDatePicker && Platform.OS !== 'ios' ? (
                 <View className="mt-4 overflow-hidden rounded-[20px] bg-[#141d18] px-2 pt-2">
                   <DateTimePicker
                     value={dueDate}
                     mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    display="default"
                     onChange={handleDateChange}
                     minimumDate={new Date()}
                     textColor="#f4f7f5"
                     accentColor="#8bff62"
                     themeVariant="dark"
                   />
-
-                  {Platform.OS === 'ios' ? (
-                    <View className="border-t border-[#1c2721] px-2 py-3">
-                      <Button
-                        variant="ghost"
-                        className="h-11 rounded-[16px] bg-[#8bff62]"
-                        onPress={() => setShowDatePicker(false)}>
-                        <Text className="text-sm font-semibold text-[#07110a]">Done</Text>
-                      </Button>
-                    </View>
-                  ) : null}
                 </View>
               ) : null}
             </View>
@@ -558,6 +547,43 @@ export default function PlanAheadScreen() {
             </ScrollView>
           </View>
         </View>
+      ) : null}
+
+      {Platform.OS === 'ios' ? (
+        <Modal
+          animationType="fade"
+          transparent
+          visible={showDatePicker}
+          onRequestClose={() => setShowDatePicker(false)}>
+          <View className="flex-1 justify-end bg-black/60 px-4 pb-6">
+            <Pressable className="flex-1" onPress={() => setShowDatePicker(false)} />
+            <View className="rounded-[28px] border border-[#1b2a21] bg-[#0f1512] p-4">
+              <View className="mb-3 flex-row items-center justify-between">
+                <Text className="text-[11px] font-semibold uppercase tracking-[2px] text-[#8bff62]">
+                  {dateFieldLabel}
+                </Text>
+                <Pressable
+                  className="rounded-full border border-[#1b2a21] bg-[#131b17] px-4 py-2"
+                  onPress={() => setShowDatePicker(false)}>
+                  <Text className="text-sm font-semibold text-[#f4f7f5]">Done</Text>
+                </Pressable>
+              </View>
+
+              <View className="rounded-[22px] bg-[#131b17] px-2 py-2">
+                <DateTimePicker
+                  value={dueDate}
+                  mode="date"
+                  display="spinner"
+                  onChange={handleDateChange}
+                  minimumDate={new Date()}
+                  textColor="#f4f7f5"
+                  accentColor="#8bff62"
+                  themeVariant="dark"
+                />
+              </View>
+            </View>
+          </View>
+        </Modal>
       ) : null}
     </View>
   );
