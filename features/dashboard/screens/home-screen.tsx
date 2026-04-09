@@ -71,7 +71,9 @@ export default function HomeScreen() {
   const recentExpense = useMemo(
     () =>
       recentTransactions
-        .filter((transaction) => transaction.type === 'EXPENSE' && transaction.source !== 'TRANSFER')
+        .filter(
+          (transaction) => transaction.type === 'EXPENSE' && transaction.source !== 'TRANSFER'
+        )
         .reduce((sum, transaction) => sum + Number(transaction.amount), 0),
     [recentTransactions]
   );
@@ -85,7 +87,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}>
         <View className="pt-safe rounded-b-[36px] bg-[#0b120e] px-6 pb-6 pt-4">
           <AppPageHeader
-            eyebrow="Penni overview"
+            eyebrow="Dashboard"
             title={`${getGreeting()}, ${firstName}!`}
             subtitle="Track balances, upcoming bills, and the categories shaping your month."
             inverted
