@@ -4,7 +4,13 @@ import { Badge } from '@/components/ui/pill';
 import { Text } from '@/components/ui/text';
 import { ACCOUNT_TYPE_META, type AccountFilter } from '@/features/finance/lib/constants';
 import { formatCurrency, formatDueDayOfMonth } from '@/features/finance/lib/formatters';
-import type { Account } from '@/features/finance/lib/finance.types';
+import {
+  getAccountAvailableCredit,
+  getAccountCreditLimit,
+  getAccountDueDayOfMonth,
+  getAccountStatementDayOfMonth,
+  type Account,
+} from '@/features/finance/lib/finance.types';
 import { router } from 'expo-router';
 import { PlusIcon, Trash2Icon, WalletIcon } from 'lucide-react-native';
 import React from 'react';
@@ -73,9 +79,10 @@ export function AccountCard({
   const meta = ACCOUNT_TYPE_META[account.type];
   const TypeIcon = meta.icon;
   const isCreditCard = account.type === 'CREDIT_CARD';
-  const availableCredit = account.availableCredit ? Number(account.availableCredit) : null;
-  const creditLimit = account.creditLimit ? Number(account.creditLimit) : null;
-  const dueDayLabel = formatDueDayOfMonth(account.dueDayOfMonth);
+  const availableCredit = getAccountAvailableCredit(account);
+  const creditLimit = getAccountCreditLimit(account);
+  const dueDayLabel = formatDueDayOfMonth(getAccountDueDayOfMonth(account));
+  const statementDayLabel = formatDueDayOfMonth(getAccountStatementDayOfMonth(account));
 
   return (
     <Pressable
@@ -110,15 +117,15 @@ export function AccountCard({
             </View>
             <Text
               className={`shrink-0 text-[16px] font-bold tracking-tight ${Number(account.balance) < 0 ? 'text-[#ff8a94]' : 'text-[#f4f7f5]'}`}>
-              {formatCurrency(Number(account.balance), account.currency)}
+              {formatCurrency(isCreditCard && availableCredit !== null ? availableCredit : Number(account.balance), account.currency)}
             </Text>
           </View>
         </View>
       </View>
 
-      {isCreditCard && (availableCredit !== null || creditLimit !== null || dueDayLabel) ? (
+      {isCreditCard && (availableCredit !== null || creditLimit !== null || dueDayLabel || statementDayLabel) ? (
         <View className="mt-4 border-t border-[#1b2a21]/30 pt-4">
-          <View className="flex-row items-center justify-between">
+          <View className="flex-row items-start justify-between">
             <View className="flex-row items-center gap-5">
               {availableCredit !== null ? (
                 <View>
@@ -141,14 +148,24 @@ export function AccountCard({
                 </View>
               ) : null}
             </View>
-            {dueDayLabel ? (
-              <View className="items-end">
-                <Text className="text-[9px] font-bold uppercase tracking-widest text-[#5c6e64]">
-                  Due Date
-                </Text>
-                <Text className="mt-0.5 text-[13px] font-bold text-[#ffc857]">{dueDayLabel}</Text>
-              </View>
-            ) : null}
+            <View className="items-end gap-2">
+              {statementDayLabel ? (
+                <View className="items-end">
+                  <Text className="text-[9px] font-bold uppercase tracking-widest text-[#5c6e64]">
+                    Statement Day
+                  </Text>
+                  <Text className="mt-0.5 text-[13px] font-bold text-[#9dd6ff]">{statementDayLabel}</Text>
+                </View>
+              ) : null}
+              {dueDayLabel ? (
+                <View className="items-end">
+                  <Text className="text-[9px] font-bold uppercase tracking-widest text-[#5c6e64]">
+                    Due Date
+                  </Text>
+                  <Text className="mt-0.5 text-[13px] font-bold text-[#ffc857]">{dueDayLabel}</Text>
+                </View>
+              ) : null}
+            </View>
           </View>
         </View>
       ) : null}

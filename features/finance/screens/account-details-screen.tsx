@@ -12,6 +12,12 @@ import {
   formatDueDayOfMonth,
   formatRecurrenceLabel,
 } from '@/features/finance/lib/formatters';
+import {
+  getAccountAvailableCredit,
+  getAccountCreditLimit,
+  getAccountDueDayOfMonth,
+  getAccountStatementDayOfMonth,
+} from '@/features/finance/lib/finance.types';
 import { groupTransactionsIntoSections } from '@/features/finance/lib/selectors';
 import { StatusBar } from 'expo-status-bar';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -92,9 +98,11 @@ export default function AccountDetailsScreen() {
   const meta = ACCOUNT_TYPE_META[account.type];
   const TypeIcon = meta.icon;
   const isCreditCard = account.type === 'CREDIT_CARD';
-  const availableCredit = Number(account.availableCredit ?? 0);
-  const creditLimit = Number(account.creditLimit ?? 0);
+  const availableCredit = getAccountAvailableCredit(account) ?? 0;
+  const creditLimit = getAccountCreditLimit(account) ?? 0;
   const usedCredit = Math.max(0, creditLimit - availableCredit);
+  const dueDayOfMonth = getAccountDueDayOfMonth(account);
+  const statementDayOfMonth = getAccountStatementDayOfMonth(account);
 
   return (
     <View className="flex-1 bg-[#060b08]">
@@ -170,13 +178,23 @@ export default function AccountDetailsScreen() {
                     {formatCurrency(creditLimit, account.currency)}
                   </Text>
                 </View>
-                {account.dueDayOfMonth ? (
+                {dueDayOfMonth ? (
                   <View className="min-w-[120px] flex-1 rounded-[20px] bg-[#141d18] p-4">
                     <Text className="text-[11px] font-semibold uppercase tracking-[1.8px] text-[#6d786f]">
                       Due day
                     </Text>
                     <Text className="mt-2 text-[18px] font-semibold text-[#ffc857]">
-                      {formatDueDayOfMonth(account.dueDayOfMonth)}
+                      {formatDueDayOfMonth(dueDayOfMonth)}
+                    </Text>
+                  </View>
+                ) : null}
+                {statementDayOfMonth ? (
+                  <View className="min-w-[120px] flex-1 rounded-[20px] bg-[#141d18] p-4">
+                    <Text className="text-[11px] font-semibold uppercase tracking-[1.8px] text-[#6d786f]">
+                      Statement day
+                    </Text>
+                    <Text className="mt-2 text-[18px] font-semibold text-[#9dd6ff]">
+                      {formatDueDayOfMonth(statementDayOfMonth)}
                     </Text>
                   </View>
                 ) : null}

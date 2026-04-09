@@ -1,15 +1,20 @@
 import { api } from '@/lib/api';
 import type { Account, AccountType } from '@/features/finance/lib/finance.types';
 
+export type CreditCardAccountInput = {
+  creditLimit: string;
+  availableCredit: string;
+  dueDayOfMonth: number;
+  statementDayOfMonth?: number | null;
+};
+
 export type CreateAccountInput = {
   name: string;
   type: AccountType;
   currency: string;
   balance: string;
   institutionName?: string;
-  creditLimit?: string;
-  availableCredit?: string;
-  dueDayOfMonth?: number;
+  creditCard?: CreditCardAccountInput;
 };
 
 export async function listAccounts(token: string) {

@@ -57,6 +57,7 @@ export default function AccountComposeScreen() {
       creditLimit: '',
       availableCredit: '',
       dueDayOfMonth: '',
+      statementDayOfMonth: '',
     },
   });
 
@@ -86,11 +87,19 @@ export default function AccountComposeScreen() {
       type: values.type,
       currency: values.currency.trim().toUpperCase(),
       institutionName: values.institutionName?.trim() || undefined,
-      creditLimit: values.creditLimit?.trim() || undefined,
-      availableCredit: values.availableCredit?.trim() || undefined,
-      dueDayOfMonth: values.dueDayOfMonth?.trim()
-        ? Number(values.dueDayOfMonth.trim())
-        : undefined,
+      creditCard:
+        values.type === 'CREDIT_CARD'
+          ? {
+              creditLimit: values.creditLimit?.trim() || '0',
+              availableCredit: values.availableCredit?.trim() || '0',
+              dueDayOfMonth: values.dueDayOfMonth?.trim()
+                ? Number(values.dueDayOfMonth.trim())
+                : 1,
+              statementDayOfMonth: values.statementDayOfMonth?.trim()
+                ? Number(values.statementDayOfMonth.trim())
+                : null,
+            }
+          : undefined,
     });
 
     router.back();
@@ -251,6 +260,29 @@ export default function AccountComposeScreen() {
                       </View>
                     </Field>
 
+                    <Field label="Statement day" error={errors.statementDayOfMonth?.message}>
+                      <View className="rounded-[20px] bg-[#141d18] px-4 py-1 shadow-sm shadow-black/20">
+                        <Controller
+                          control={control}
+                          name="statementDayOfMonth"
+                          render={({ field: { onChange, value } }) => (
+                            <TextInput
+                              value={value}
+                              onChangeText={onChange}
+                              keyboardType="number-pad"
+                              placeholder="Optional for now"
+                              placeholderTextColor="#6f7d74"
+                              autoCorrect={false}
+                              spellCheck={false}
+                              autoComplete="off"
+                              className="h-12 bg-transparent px-0 text-[17px] text-[#f4f7f5]"
+                              style={CENTERED_INPUT_STYLE}
+                            />
+                          )}
+                        />
+                      </View>
+                    </Field>
+
                     <View className="rounded-[20px] border border-[#203326] bg-[#111c16] px-4 py-4">
                       <Text className="text-[12px] font-semibold uppercase tracking-[2px] text-[#6f7d74]">
                         Current balance owed
@@ -329,7 +361,7 @@ export default function AccountComposeScreen() {
                   </Text>
                   <Text className="mt-2 text-sm leading-6 text-[#7f8c86]">
                     {isCreditCard
-                      ? 'Enter the card balance, total limit, available limit, and due day so Penni can track it properly.'
+                      ? 'Enter the card balance, total limit, available limit, due day, and optional statement day so Penni can track it properly.'
                       : 'We are creating a manual account entry for now, so the app does not need a bank connector yet.'}
                   </Text>
                 </View>

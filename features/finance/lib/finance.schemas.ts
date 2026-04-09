@@ -33,6 +33,12 @@ export const createAccountSchema = z
       .regex(/^(?:[1-9]|[12]\d|3[01])$/, 'Use a day between 1 and 31.')
       .optional()
       .or(z.literal('')),
+    statementDayOfMonth: z
+      .string()
+      .trim()
+      .regex(/^(?:[1-9]|[12]\d|3[01])$/, 'Use a day between 1 and 31.')
+      .optional()
+      .or(z.literal('')),
   })
   .superRefine((value, ctx) => {
     if (value.type !== 'CREDIT_CARD') {

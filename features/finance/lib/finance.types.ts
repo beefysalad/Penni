@@ -3,6 +3,13 @@ export type CategoryType = 'EXPENSE' | 'INCOME';
 export type TransactionSource = 'MANUAL' | 'RECURRING' | 'IMPORTED' | 'TRANSFER';
 export type RecurrenceFrequency = 'WEEKLY' | 'MONTHLY' | 'SEMI_MONTHLY' | 'QUARTERLY' | 'YEARLY';
 
+export type CreditCardDetails = {
+  creditLimit: string;
+  availableCredit: string;
+  dueDayOfMonth: number;
+  statementDayOfMonth: number | null;
+};
+
 export type Account = {
   id: string;
   clientId: string | null;
@@ -11,9 +18,7 @@ export type Account = {
   type: AccountType;
   currency: string;
   balance: string;
-  creditLimit: string | null;
-  availableCredit: string | null;
-  dueDayOfMonth: number | null;
+  creditCard: CreditCardDetails | null;
   institutionName: string | null;
   isArchived: boolean;
   lastSyncedAt: string | null;
@@ -98,3 +103,19 @@ export type Budget = {
   deletedAt: string | null;
   clientUpdatedAt: string | null;
 };
+
+export function getAccountCreditLimit(account: Account) {
+  return account.creditCard ? Number(account.creditCard.creditLimit) : null;
+}
+
+export function getAccountAvailableCredit(account: Account) {
+  return account.creditCard ? Number(account.creditCard.availableCredit) : null;
+}
+
+export function getAccountDueDayOfMonth(account: Account) {
+  return account.creditCard?.dueDayOfMonth ?? null;
+}
+
+export function getAccountStatementDayOfMonth(account: Account) {
+  return account.creditCard?.statementDayOfMonth ?? null;
+}

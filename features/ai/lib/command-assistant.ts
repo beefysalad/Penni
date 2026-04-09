@@ -310,11 +310,19 @@ export function buildExecutableCommand(parsed: ParsedCommand, context: { account
       ],
       payload: {
         ...validated.data,
-        creditLimit: validated.data.creditLimit?.trim() || undefined,
-        availableCredit: validated.data.availableCredit?.trim() || undefined,
-        dueDayOfMonth: validated.data.dueDayOfMonth?.trim()
-          ? Number(validated.data.dueDayOfMonth.trim())
-          : undefined,
+        creditCard:
+          validated.data.type === 'CREDIT_CARD'
+            ? {
+                creditLimit: validated.data.creditLimit?.trim() || '0',
+                availableCredit: validated.data.availableCredit?.trim() || '0',
+                dueDayOfMonth: validated.data.dueDayOfMonth?.trim()
+                  ? Number(validated.data.dueDayOfMonth.trim())
+                  : 1,
+                statementDayOfMonth: validated.data.statementDayOfMonth?.trim()
+                  ? Number(validated.data.statementDayOfMonth.trim())
+                  : null,
+              }
+            : undefined,
       },
     } satisfies ExecutableCommand;
   }

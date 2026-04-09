@@ -17,7 +17,11 @@ import {
 import { ACCOUNT_TYPE_META, TRANSACTION_MODES } from '@/features/finance/lib/constants';
 import { useTransactionCompose } from '@/features/finance/lib/transaction-compose-context';
 import { createTransactionSchema } from '@/features/finance/lib/finance.schemas';
-import type { CategoryType } from '@/features/finance/lib/finance.types';
+import {
+  getAccountAvailableCredit,
+  getAccountCreditLimit,
+  type CategoryType,
+} from '@/features/finance/lib/finance.types';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
@@ -173,7 +177,7 @@ export default function TransactionComposeScreen() {
 
     if (mode === 'Expense' && selectedAccount && Number.isFinite(numericAmount) && numericAmount > 0) {
       if (selectedAccount.type === 'CREDIT_CARD') {
-        const availableCredit = Number(selectedAccount.availableCredit ?? 0);
+        const availableCredit = Number(getAccountAvailableCredit(selectedAccount) ?? 0);
 
         if (numericAmount > availableCredit) {
           setBalanceError("Charge exceeds the card's available credit.");
@@ -361,15 +365,15 @@ export default function TransactionComposeScreen() {
                         {selectedAccount.type === 'CREDIT_CARD' ? (
                           <>
                             <Badge
-                              label={`Available ${selectedAccount.currency} ${selectedAccount.availableCredit ?? '0'}`}
+                              label={`Available ${selectedAccount.currency} ${getAccountAvailableCredit(selectedAccount)?.toFixed(2) ?? '0.00'}`}
                               variant="subtle"
                               size="sm"
                               className="bg-[#18221d]"
                               textClassName="text-[#93a19a]"
                             />
-                            {selectedAccount.creditLimit ? (
+                            {getAccountCreditLimit(selectedAccount) !== null ? (
                               <Badge
-                                label={`Limit ${selectedAccount.currency} ${selectedAccount.creditLimit}`}
+                                label={`Limit ${selectedAccount.currency} ${getAccountCreditLimit(selectedAccount)?.toFixed(2)}`}
                                 variant="subtle"
                                 size="sm"
                                 className="bg-[#18221d]"
