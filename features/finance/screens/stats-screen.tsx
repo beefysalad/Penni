@@ -236,10 +236,29 @@ export default function StatsScreen() {
                 </View>
               </View>
             ) : (
-              <View className="mt-6 rounded-[24px] bg-[#121916] p-4">
-                <Text className="text-sm leading-6 text-[#7f8c86]">
-                  Log a few expense transactions first and Penni will break down where your month is going.
-                </Text>
+              <View className="mt-6 gap-5">
+                <View className="items-center rounded-[24px] bg-[#121916] px-4 py-5">
+                  <ExpenseDonut rows={[]} total={0} />
+                </View>
+                <View className="flex-row justify-between rounded-[24px] bg-[#121916] px-5 py-4">
+                  <View className="flex-1 items-center">
+                    <Text className="text-[10px] font-semibold uppercase tracking-[1.8px] text-[#6d786f]">
+                      Spending
+                    </Text>
+                    <Text className="mt-2 text-[17px] font-semibold text-[#f4f7f5]">
+                      {formatCurrency(0)}
+                    </Text>
+                  </View>
+                  <View className="h-10 w-px bg-[#1b2a21]/40" />
+                  <View className="flex-1 items-center">
+                    <Text className="text-[10px] font-semibold uppercase tracking-[1.8px] text-[#6d786f]">
+                      Income
+                    </Text>
+                    <Text className="mt-2 text-[17px] font-semibold text-[#41d6b2]">
+                      {formatCurrency(0)}
+                    </Text>
+                  </View>
+                </View>
               </View>
             )}
           </View>

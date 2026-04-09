@@ -73,7 +73,7 @@ export default function AccountsScreen() {
         <View className="pt-safe rounded-b-[36px] bg-[#0b120e] px-6 pb-8 pt-4">
           <AppPageHeader
             eyebrow="Wallets and balances"
-            title="See all your money in one place"
+            title="Accounts"
             subtitle="Track cash, bank balances, and cards without switching between apps."
             inverted
           />
