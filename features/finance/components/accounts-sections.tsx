@@ -116,7 +116,7 @@ export function AccountCard({
               <Text className="text-[12px] font-medium text-[#73827a]">{account.currency}</Text>
             </View>
             <Text
-              className={`shrink-0 text-[16px] font-bold tracking-tight ${Number(account.balance) < 0 ? 'text-[#ff8a94]' : 'text-[#f4f7f5]'}`}>
+              className={`shrink-0 text-[16px] font-bold tracking-tight ${!isCreditCard && Number(account.balance) < 0 ? 'text-[#ff8a94]' : 'text-[#f4f7f5]'}`}>
               {formatCurrency(isCreditCard && availableCredit !== null ? availableCredit : Number(account.balance), account.currency)}
             </Text>
           </View>

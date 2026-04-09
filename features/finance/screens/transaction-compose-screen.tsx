@@ -155,6 +155,14 @@ export default function TransactionComposeScreen() {
         return;
       }
 
+      if (
+        selectedToAccount.type === 'CREDIT_CARD' &&
+        numericAmount > Math.max(0, Number(selectedToAccount.balance ?? 0))
+      ) {
+        setBalanceError("Payment exceeds the card's outstanding balance.");
+        return;
+      }
+
       setBalanceError(null);
 
       await createTransferMutation.mutateAsync({
