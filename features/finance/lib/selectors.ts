@@ -1,6 +1,8 @@
 import type { Account, Budget, Category, Transaction } from '@/features/finance/lib/finance.types';
 import { formatGroupDate } from '@/features/finance/lib/formatters';
 
+export type BudgetTimingStatus = 'CURRENT' | 'UPCOMING' | 'PAST';
+
 export type TransactionSection = {
   title: string;
   count: number;
@@ -75,6 +77,38 @@ export function getSpentForBudget(
       return date >= start && date <= end;
     })
     .reduce((sum, transaction) => sum + Math.abs(Number(transaction.amount)), 0);
+}
+
+export function getBudgetTimingStatus(budget: Budget, now = new Date()): BudgetTimingStatus {
+  const start = new Date(budget.periodStart);
+  const end = new Date(budget.periodEnd);
+
+  if (now < start) return 'UPCOMING';
+  if (now > end) return 'PAST';
+  return 'CURRENT';
+}
+
+export function sortBudgetsByTiming(budgets: Budget[], now = new Date()) {
+  const statusOrder: Record<BudgetTimingStatus, number> = {
+    CURRENT: 0,
+    UPCOMING: 1,
+    PAST: 2,
+  };
+
+  return [...budgets].sort((a, b) => {
+    const aStatus = getBudgetTimingStatus(a, now);
+    const bStatus = getBudgetTimingStatus(b, now);
+
+    if (aStatus !== bStatus) {
+      return statusOrder[aStatus] - statusOrder[bStatus];
+    }
+
+    if (aStatus === 'PAST') {
+      return new Date(b.periodEnd).getTime() - new Date(a.periodEnd).getTime();
+    }
+
+    return new Date(a.periodStart).getTime() - new Date(b.periodStart).getTime();
+  });
 }
 
 export function getCurrentMonthBounds() {

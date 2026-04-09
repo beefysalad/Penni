@@ -4,6 +4,7 @@ import { Text } from '@/components/ui/text';
 import { getDaysUntil } from '@/features/dashboard/lib/home-helpers';
 import { formatCompactDate, formatCurrency, formatRecurrenceLabel } from '@/features/finance/lib/formatters';
 import { getSpentForBudget } from '@/features/finance/lib/selectors';
+import { getBudgetTimingStatus } from '@/features/finance/lib/selectors';
 import type { Budget, PlannedItem, Transaction } from '@/features/finance/lib/finance.types';
 import {
   ArrowDownLeftIcon,
@@ -412,6 +413,8 @@ export function BudgetsSection({
   transactions: Transaction[];
   onOpenBudgets: () => void;
 }) {
+  const currentBudgets = budgets.filter((budget) => getBudgetTimingStatus(budget) === 'CURRENT');
+
   return (
     <View className="rounded-[30px] border border-[#17211c] bg-[#0f1512] p-5">
       <View className="flex-row items-start justify-between gap-4">
@@ -432,16 +435,25 @@ export function BudgetsSection({
         </View>
       ) : null}
 
-      {!isLoading && budgets.length > 0 ? (
+      {!isLoading && currentBudgets.length > 0 ? (
         <View className="mt-5 gap-3">
-          {budgets.slice(0, 3).map((budget) => {
+          {currentBudgets.slice(0, 3).map((budget) => {
             const spent = getSpentForBudget(budget, transactions);
             const limit = Number(budget.amount);
             const remaining = limit - spent;
             const pct = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
             const isOver = spent > limit;
+            const isReached = !isOver && limit > 0 && spent >= limit;
             const isWarning = pct >= budget.alertThreshold;
-            const barColor = isOver ? '#ff8a94' : isWarning ? '#ffc857' : '#8bff62';
+            const barColor = isOver ? '#ff8a94' : isReached ? '#ffc857' : isWarning ? '#ffc857' : '#8bff62';
+            const statusLabel = isOver ? 'Over budget' : isReached ? 'Budget reached' : isWarning ? 'Approaching limit' : 'On track';
+            const statusClass = isOver
+              ? 'text-[#ff8a94]'
+              : isReached
+                ? 'text-[#ffc857]'
+              : isWarning
+                ? 'text-[#ffc857]'
+                : 'text-[#6d786f]';
 
             return (
               <Pressable
@@ -470,16 +482,22 @@ export function BudgetsSection({
                     style={{ width: `${pct}%`, backgroundColor: barColor }}
                   />
                 </View>
+                <View className="mt-1.5 flex-row justify-between">
+                  <Text className="text-[11px] text-[#6d786f]">{Math.round(pct)}% used</Text>
+                  <Text className={`text-[11px] font-semibold ${statusClass}`}>{statusLabel}</Text>
+                </View>
               </Pressable>
             );
           })}
         </View>
       ) : null}
 
-      {!isLoading && budgets.length === 0 ? (
+      {!isLoading && currentBudgets.length === 0 ? (
         <View className="mt-5 rounded-[24px] bg-[#131b17] p-4">
           <Text className="text-sm leading-6 text-[#7f8c86]">
-            Set a budget to start tracking category drift and remaining room.
+            {budgets.length > 0
+              ? 'No budgets are active for today.'
+              : 'Set a budget to start tracking category drift and remaining room.'}
           </Text>
         </View>
       ) : null}
