@@ -2,6 +2,7 @@ import {
   BotIcon,
   CreditCardIcon,
   GoalIcon,
+  HandCoinsIcon,
   MessageSquareIcon,
   ShapesIcon,
   UserRoundIcon,
@@ -50,6 +51,14 @@ export const FINANCE_ITEMS = [
     iconBg: 'bg-[#2a2518]',
     iconColor: '#ffc857',
     href: '/budgets' as const,
+  },
+  {
+    label: 'Debts',
+    description: 'Track what you owe and what is owed to you',
+    icon: HandCoinsIcon,
+    iconBg: 'bg-[#1f2217]',
+    iconColor: '#d9f27c',
+    href: '/debts' as const,
   },
 ] as const;
 

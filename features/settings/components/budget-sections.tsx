@@ -5,40 +5,22 @@ import { getBudgetTimingStatus } from '@/features/finance/lib/selectors';
 import { Trash2Icon } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 
-export function BudgetProgressBar({
-  spent,
-  limit,
-  alertThreshold,
-}: {
-  spent: number;
-  limit: number;
-  alertThreshold: number;
-}) {
+// ─── Progress bar ──────────────────────────────────────────────────────────────
+
+function getProgressState(spent: number, limit: number, alertThreshold: number) {
   const pct = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
   const isOver = spent > limit;
   const isReached = !isOver && limit > 0 && spent >= limit;
   const isWarning = pct >= alertThreshold;
-
-  const barColor = isOver ? '#ff8a94' : isReached ? '#ffc857' : isWarning ? '#ffc857' : '#8bff62';
-
-  return (
-    <View className="mt-3">
-      <View className="h-2 overflow-hidden rounded-full bg-[#1a2c1f]">
-        <View
-          className="h-full rounded-full"
-          style={{ width: `${pct}%`, backgroundColor: barColor }}
-        />
-      </View>
-      <View className="mt-1.5 flex-row justify-between">
-        <Text className="text-[11px] text-[#6d786f]">{Math.round(pct)}% used</Text>
-        <Text
-          className={`text-[11px] font-semibold ${isOver ? 'text-[#ff8a94]' : isReached ? 'text-[#ffc857]' : isWarning ? 'text-[#ffc857]' : 'text-[#6d786f]'}`}>
-          {isOver ? 'Over budget' : isReached ? 'Budget reached' : isWarning ? 'Approaching limit' : 'On track'}
-        </Text>
-      </View>
-    </View>
-  );
+  return {
+    pct,
+    label: isOver ? 'Over budget' : isReached ? 'Reached' : isWarning ? 'Approaching' : 'On track',
+    labelColor: isOver ? '#ff8a94' : isReached || isWarning ? '#ffc857' : '#4a5650',
+    barColor: isOver ? '#ff8a94' : isReached || isWarning ? '#ffc857' : '#8bff62',
+  };
 }
+
+// ─── Budget card ───────────────────────────────────────────────────────────────
 
 export function BudgetCard({
   budget,
@@ -53,60 +35,69 @@ export function BudgetCard({
 }) {
   const limit = Number(budget.amount);
   const remaining = limit - spent;
+  const { pct, label, labelColor, barColor } = getProgressState(spent, limit, budget.alertThreshold);
+
   const timingStatus = getBudgetTimingStatus(budget);
   const statusLabel =
     timingStatus === 'CURRENT' ? 'Current' : timingStatus === 'UPCOMING' ? 'Upcoming' : 'Past';
-  const statusClass =
-    timingStatus === 'CURRENT'
-      ? 'bg-[#16211b] text-[#8bff62]'
-      : timingStatus === 'UPCOMING'
-        ? 'bg-[#151f25] text-[#9dd6ff]'
-        : 'bg-[#18221d] text-[#93a19a]';
+  const statusBg =
+    timingStatus === 'CURRENT' ? '#16211b' : timingStatus === 'UPCOMING' ? '#151f25' : '#18221d';
+  const statusText =
+    timingStatus === 'CURRENT' ? '#8bff62' : timingStatus === 'UPCOMING' ? '#9dd6ff' : '#93a19a';
 
   return (
-    <View className="rounded-[24px] bg-[#131b17] p-4">
+    <View className="gap-3 rounded-[20px] border border-[#17211c] bg-[#0f1512] p-4">
+      {/* Top row: name + delete */}
       <View className="flex-row items-start justify-between gap-3">
         <View className="flex-1">
-          <Text className="text-lg font-semibold text-[#f4f7f5]" numberOfLines={1}>
-            {budget.name || 'Unnamed budget'}
+          <Text className="text-[15px] font-bold text-[#f4f7f5]" numberOfLines={1}>
+            {budget.name || categoryName || 'Unnamed budget'}
           </Text>
           <View className="mt-1 flex-row flex-wrap items-center gap-1.5">
-            <Text className="text-xs text-[#6d786f]">
+            <Text className="text-[11px] text-[#4a5650]">
               {formatPeriod(budget.periodStart, budget.periodEnd)}
             </Text>
-            <Text className="text-[10px] text-[#4a5650]">·</Text>
-            <View className={`rounded-full px-2 py-1 ${statusClass}`}>
-              <Text className="text-[10px] font-semibold uppercase tracking-[1.2px]">
+            {/* Status pill */}
+            <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: statusBg }}>
+              <Text className="text-[9px] font-bold uppercase tracking-[1.2px]" style={{ color: statusText }}>
                 {statusLabel}
               </Text>
             </View>
             {categoryName ? (
-              <>
-                <Text className="text-[10px] text-[#4a5650]">·</Text>
-                <Text className="text-xs text-[#41d6b2]">{categoryName}</Text>
-              </>
+              <Text className="text-[11px] text-[#41d6b2]">{categoryName}</Text>
             ) : null}
           </View>
         </View>
-        <View className="items-end">
-          <Text
-            className={`text-lg font-semibold ${remaining < 0 ? 'text-[#ff8a94]' : 'text-[#f4f7f5]'}`}>
-            {formatCurrency(remaining, budget.currency)}
-          </Text>
-          <Text className="text-[11px] text-[#6d786f]">remaining</Text>
-        </View>
+
+        <Pressable
+          onPress={onDelete}
+          className="size-8 items-center justify-center rounded-full bg-[#241719]"
+          hitSlop={8}
+        >
+          <Trash2Icon color="#ff8a94" size={14} />
+        </Pressable>
       </View>
 
-      <BudgetProgressBar spent={spent} limit={limit} alertThreshold={budget.alertThreshold} />
+      {/* Progress bar */}
+      <View className="h-1.5 overflow-hidden rounded-full bg-[#1a2c1f]">
+        <View
+          className="h-full rounded-full"
+          style={{ width: `${pct}%`, backgroundColor: barColor }}
+        />
+      </View>
 
-      <View className="mt-3 flex-row items-center justify-between">
-        <Text className="text-xs text-[#7f8c86]">
-          {formatCurrency(spent, budget.currency)} of {formatCurrency(limit, budget.currency)}
+      {/* Bottom row: remaining + status label */}
+      <View className="flex-row items-center justify-between gap-2">
+        <Text className="text-[12px] font-semibold" style={{ color: remaining < 0 ? '#ff8a94' : '#93a19a' }}>
+          {remaining < 0 ? 'Over ' : ''}{formatCurrency(Math.abs(remaining), budget.currency)} left
+          {'  '}
+          <Text className="text-[#4a5650] font-normal">
+            of {formatCurrency(limit, budget.currency)}
+          </Text>
         </Text>
-        <Pressable className="flex-row items-center gap-1.5" onPress={onDelete}>
-          <Trash2Icon color="#ff8a94" size={14} />
-          <Text className="text-xs font-semibold text-[#ff8a94]">Remove</Text>
-        </Pressable>
+        <Text className="text-[11px] font-bold" style={{ color: labelColor }}>
+          {label}
+        </Text>
       </View>
     </View>
   );

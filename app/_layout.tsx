@@ -85,6 +85,7 @@ function Routes() {
         <Stack.Screen name="(settings)/account-details" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(settings)/categories" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(settings)/budgets" options={DETAIL_SCREEN_OPTIONS} />
+        <Stack.Screen name="(settings)/debts" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(settings)/recurring" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(settings)/ai-chat" options={DETAIL_SCREEN_OPTIONS} />
         <Stack.Screen name="(settings)/insights" options={DETAIL_SCREEN_OPTIONS} />
@@ -95,6 +96,7 @@ function Routes() {
         <Stack.Screen name="(sheets)/category-picker" options={TRANSACTION_SHEET_OPTIONS} />
         <Stack.Screen name="(sheets)/plan-ahead" options={TRANSACTION_SHEET_OPTIONS} />
         <Stack.Screen name="(sheets)/budget-compose" options={TRANSACTION_SHEET_OPTIONS} />
+        <Stack.Screen name="(sheets)/debt-compose" options={TRANSACTION_SHEET_OPTIONS} />
       </Stack.Protected>
 
       {/* Screens outside the guards are accessible to everyone (e.g. not found) */}
