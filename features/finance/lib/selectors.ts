@@ -57,7 +57,11 @@ export function groupTransactionsIntoSections(transactions: Transaction[]): Tran
     .map(([, rows]) => ({
       title: formatGroupDate(rows[0]!.transactionAt),
       count: rows.length,
-      data: rows,
+      data: [...rows].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() ||
+          new Date(b.transactionAt).getTime() - new Date(a.transactionAt).getTime(),
+      ),
     }));
 }
 
