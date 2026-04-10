@@ -10,6 +10,7 @@ import { SearchInput } from '@/components/ui/search-input';
 import { Text } from '@/components/ui/text';
 import { ACCOUNT_TYPE_META } from '@/features/finance/lib/constants';
 import { useAccountsQuery } from '@/features/finance/hooks/use-accounts-query';
+import { useCategoriesQuery } from '@/features/finance/hooks/use-categories-query';
 import { useCreatePlannedItemMutation } from '@/features/finance/hooks/use-planned-items-query';
 import { createPlannedItemSchema } from '@/features/finance/lib/finance.schemas';
 import { formatDueDayOfMonth, formatRecurrencePhrase } from '@/features/finance/lib/formatters';
@@ -51,15 +52,22 @@ export default function PlanAheadScreen() {
   const [semiMonthlySecondDay, setSemiMonthlySecondDay] = useState('30');
   const [notes, setNotes] = useState('');
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [accountSearch, setAccountSearch] = useState('');
+  const [categorySearch, setCategorySearch] = useState('');
   const [isAccountPickerOpen, setIsAccountPickerOpen] = useState(false);
+  const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
 
   const accounts = accountsQuery.data ?? [];
+  const categoryType: CategoryType = itemType === 'Bill' ? 'EXPENSE' : 'INCOME';
+  const categoriesQuery = useCategoriesQuery({ type: categoryType });
+  const categories = categoriesQuery.data ?? [];
   const preferredIncomeAccount = useMemo(
     () => getPrimaryAssetAccount(accounts) ?? accounts[0] ?? null,
     [accounts],
   );
   const selectedAccount = accounts.find((account) => account.id === selectedAccountId) ?? null;
+  const selectedCategory = categories.find((category) => category.id === selectedCategoryId) ?? null;
   const filteredAccounts = useMemo(() => {
     const query = accountSearch.trim().toLowerCase();
 
@@ -71,6 +79,15 @@ export default function PlanAheadScreen() {
       `${account.name} ${account.type} ${account.currency}`.toLowerCase().includes(query),
     );
   }, [accounts, accountSearch]);
+  const filteredCategories = useMemo(() => {
+    const query = categorySearch.trim().toLowerCase();
+
+    if (!query) {
+      return categories;
+    }
+
+    return categories.filter((category) => category.name.toLowerCase().includes(query));
+  }, [categories, categorySearch]);
   const dueDateLabel = formatDate(dueDate);
   const dateFieldLabel = itemType === 'Bill' ? 'First due date' : 'First payout date';
   const previewDateLabel = itemType === 'Bill' ? 'Due' : 'Payout';
@@ -81,6 +98,17 @@ export default function PlanAheadScreen() {
       setSelectedAccountId(preferredIncomeAccount.id);
     }
   }, [itemType, preferredIncomeAccount, selectedAccountId]);
+
+  useEffect(() => {
+    if (categories.length === 0) {
+      setSelectedCategoryId(null);
+      return;
+    }
+
+    if (!selectedCategoryId || !categories.some((category) => category.id === selectedCategoryId)) {
+      setSelectedCategoryId(categories[0]?.id ?? null);
+    }
+  }, [categories, selectedCategoryId]);
 
   function handleDateChange(event: DateTimePickerEvent, selectedDate?: Date) {
     if (Platform.OS !== 'ios') {
@@ -107,6 +135,7 @@ export default function PlanAheadScreen() {
 
     const parsed = createPlannedItemSchema.safeParse({
       accountId: selectedAccountId ?? undefined,
+      categoryId: selectedCategoryId ?? undefined,
       type,
       title: title.trim(),
       notes: notes.trim() || undefined,
@@ -204,6 +233,27 @@ export default function PlanAheadScreen() {
                       style={NUMERIC_INPUT_STYLE}
                     />
                   </View>
+                </Field>
+
+                <Field label="Category">
+                  <Pressable
+                    className="flex-row items-center justify-between rounded-[18px] bg-[#141d18] px-4 py-4"
+                    onPress={() => setIsCategoryPickerOpen(true)}>
+                    {selectedCategory ? (
+                      <View className="flex-row items-center gap-3">
+                        <View
+                          className="size-3 rounded-full"
+                          style={{ backgroundColor: selectedCategory.colorHex ?? '#8bff62' }}
+                        />
+                        <Text className="text-[16px] font-medium text-[#f4f7f5]">
+                          {selectedCategory.name}
+                        </Text>
+                      </View>
+                    ) : (
+                      <Text className="text-[16px] text-[#728178]">Choose category</Text>
+                    )}
+                    <ChevronDownIcon color="#93a19a" size={18} />
+                  </Pressable>
                 </Field>
 
                 <Field label={dateFieldLabel}>
@@ -422,6 +472,11 @@ export default function PlanAheadScreen() {
                   {itemType === 'Bill' ? 'Pays from' : 'Deposits into'} {selectedAccount.name}
                 </Text>
               ) : null}
+              {selectedCategory ? (
+                <Text className="mt-2 text-xs text-[#93a19a]">
+                  Category: {selectedCategory.name}
+                </Text>
+              ) : null}
               {recurringEvery === 'Semi-monthly' ? (
                 <Text className="mt-2 text-xs text-[#93a19a]">
                   {formatDueDayOfMonth(Number(semiMonthlyFirstDay)) ?? '--'} and{' '}
@@ -539,6 +594,105 @@ export default function PlanAheadScreen() {
                           <Text className="text-base font-semibold text-[#f4f7f5]">{account.currency}</Text>
                           <Text className="mt-1 text-sm text-[#8d9a92]">{account.balance}</Text>
                         </View>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      ) : null}
+
+      {isCategoryPickerOpen ? (
+        <View className="absolute inset-0 bg-black/65">
+          <Pressable className="flex-1" onPress={() => setIsCategoryPickerOpen(false)} />
+
+          <View className="max-h-[82%] rounded-t-[34px] border-t border-[#1b2a21] bg-[#0b120e] pb-8 shadow-2xl shadow-black/60">
+            <View className="items-center pt-3">
+              <View className="h-1.5 w-16 rounded-full bg-[#2a392f]" />
+            </View>
+
+            <View className="flex-row items-center justify-between px-5 pt-4">
+              <View>
+                <Text className="text-xs font-semibold uppercase tracking-[2.4px] text-[#8bff62]/70">
+                  Categories
+                </Text>
+                <Text className="mt-2 text-[28px] font-semibold leading-[34px] text-white">
+                  Select category
+                </Text>
+              </View>
+              <Pressable
+                className="size-11 items-center justify-center rounded-full bg-[#111916]"
+                onPress={() => setIsCategoryPickerOpen(false)}>
+                <XIcon color="#f4f7f5" size={20} />
+              </Pressable>
+            </View>
+
+            <ScrollView
+              className="mt-5"
+              contentContainerClassName="gap-5 px-5 pb-4"
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}>
+              <SearchInput
+                value={categorySearch}
+                onChangeText={setCategorySearch}
+                placeholder="Search categories"
+              />
+
+              {categoriesQuery.isLoading ? (
+                <Text className="text-sm text-[#7f8c86]">Loading categories...</Text>
+              ) : null}
+
+              {!categoriesQuery.isLoading && filteredCategories.length === 0 ? (
+                <Text className="text-sm text-[#7f8c86]">
+                  {itemType === 'Bill'
+                    ? 'No expense categories yet.'
+                    : 'No income categories yet.'}
+                </Text>
+              ) : null}
+
+              <Pressable
+                className={`rounded-[20px] border px-4 py-4 ${
+                  !selectedCategoryId ? 'border-[#52d776] bg-[#111c16]' : 'border-[#17211c] bg-[#131b17]'
+                }`}
+                onPress={() => {
+                  setSelectedCategoryId(null);
+                  setIsCategoryPickerOpen(false);
+                }}>
+                <View className="flex-row items-center justify-between gap-3">
+                  <Text className={`text-base font-semibold ${!selectedCategoryId ? 'text-[#8bff62]' : 'text-[#f4f7f5]'}`}>
+                    No category
+                  </Text>
+                  {!selectedCategoryId ? <CheckIcon color="#8bff62" size={16} /> : null}
+                </View>
+              </Pressable>
+
+              <View className="gap-3">
+                {filteredCategories.map((category) => {
+                  const isSelected = category.id === selectedCategoryId;
+
+                  return (
+                    <Pressable
+                      key={category.id}
+                      className={`rounded-[20px] border px-4 py-4 ${
+                        isSelected ? 'border-[#52d776] bg-[#111c16]' : 'border-[#17211c] bg-[#131b17]'
+                      }`}
+                      onPress={() => {
+                        setSelectedCategoryId(category.id);
+                        setIsCategoryPickerOpen(false);
+                      }}>
+                      <View className="flex-row items-center justify-between gap-3">
+                        <View className="flex-row items-center gap-3">
+                          <View
+                            className="size-3 rounded-full"
+                            style={{ backgroundColor: category.colorHex ?? '#dce2de' }}
+                          />
+                          <Text className="text-base font-semibold text-[#f4f7f5]">
+                            {category.name}
+                          </Text>
+                        </View>
+                        {isSelected ? <CheckIcon color="#8bff62" size={16} /> : null}
                       </View>
                     </Pressable>
                   );

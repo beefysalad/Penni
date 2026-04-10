@@ -117,6 +117,7 @@ export const createTransactionSchema = z.object({
 export const createPlannedItemSchema = z
   .object({
     accountId: z.string().trim().optional(),
+    categoryId: z.string().trim().optional(),
     type: categoryTypeSchema,
     title: z.string().trim().min(1, 'Name is required.').max(160),
     notes: z.string().trim().max(2000).optional(),

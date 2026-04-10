@@ -70,7 +70,7 @@ export const ACCOUNT_TYPE_OPTIONS = [
   { label: 'Other', value: 'OTHER' },
 ] as const;
 
-export const ACCOUNT_CURRENCY_OPTIONS = ['PHP', 'USD', 'SGD'] as const;
+export const ACCOUNT_CURRENCY_OPTIONS = ['PHP'] as const;
 
 export const CATEGORY_TYPES = [
   { label: 'Expense', value: 'EXPENSE' },
