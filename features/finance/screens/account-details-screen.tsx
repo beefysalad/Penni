@@ -21,7 +21,13 @@ import {
 import { groupTransactionsIntoSections } from '@/features/finance/lib/selectors';
 import { StatusBar } from 'expo-status-bar';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowDownLeftIcon, ArrowUpRightIcon, CalendarClockIcon, WalletCardsIcon } from 'lucide-react-native';
+import {
+  ArrowDownLeftIcon,
+  ArrowRightLeftIcon,
+  ArrowUpRightIcon,
+  CalendarClockIcon,
+  WalletCardsIcon,
+} from 'lucide-react-native';
 import { useMemo } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
@@ -228,6 +234,24 @@ export default function AccountDetailsScreen() {
               </>
             )}
           </View>
+
+          {isCreditCard ? (
+            <Button
+              className="mt-5 h-14 rounded-[22px] bg-[#1f3725]"
+              variant="ghost"
+              onPress={() =>
+                router.push({
+                  pathname: '/transaction-compose',
+                  params: {
+                    mode: 'transfer',
+                    toAccountId: account.id,
+                  },
+                })
+              }>
+              <ArrowRightLeftIcon color="#8bff62" size={18} />
+              <Text className="ml-2 text-base font-semibold text-[#8bff62]">Pay card</Text>
+            </Button>
+          ) : null}
         </View>
 
         <View className="mt-6 rounded-[30px] border border-[#1b2a21] bg-[#111916] p-5">
@@ -280,7 +304,9 @@ export default function AccountDetailsScreen() {
         <View className="mt-6 rounded-[30px] border border-[#1b2a21] bg-[#111916] p-5">
           <Text className="text-[24px] font-semibold text-[#f4f7f5]">Recent activity</Text>
           <Text className="mt-1 text-[15px] leading-6 text-[#7f8c86]">
-            The latest transactions recorded against this account.
+            {isCreditCard
+              ? 'Card spending and card payments both show up here.'
+              : 'The latest transactions recorded against this account.'}
           </Text>
 
           <View className="mt-5 overflow-hidden rounded-[24px] bg-[#0f1512]">

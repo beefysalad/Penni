@@ -12,7 +12,7 @@ import {
   type Account,
 } from '@/features/finance/lib/finance.types';
 import { router } from 'expo-router';
-import { PlusIcon, Trash2Icon, WalletIcon } from 'lucide-react-native';
+import { ChevronRightIcon, PlusIcon, Trash2Icon, WalletIcon } from 'lucide-react-native';
 import React from 'react';
 import { Animated, Pressable, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
@@ -165,6 +165,26 @@ export function AccountCard({
                   <Text className="mt-0.5 text-[13px] font-bold text-[#ffc857]">{dueDayLabel}</Text>
                 </View>
               ) : null}
+            </View>
+          </View>
+        </View>
+      ) : null}
+
+      {onPress ? (
+        <View className="mt-4 border-t border-[#1b2a21]/30 pt-4">
+          <View className="flex-row items-center justify-between rounded-[18px] bg-[#0f1512] px-4 py-3">
+            <View className="flex-1">
+              <Text className="text-[13px] font-semibold text-[#f4f7f5]">
+                {isCreditCard ? 'View card details' : 'View details'}
+              </Text>
+              <Text className="mt-0.5 text-[11px] leading-4 text-[#7f8c86]">
+                {isCreditCard
+                  ? 'Open activity, due dates, and card actions.'
+                  : 'Open activity, balances, and recurring items.'}
+              </Text>
+            </View>
+            <View className="ml-4 size-9 items-center justify-center rounded-full bg-[#18221d]">
+              <ChevronRightIcon color="#8bff62" size={18} />
             </View>
           </View>
         </View>

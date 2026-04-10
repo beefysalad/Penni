@@ -25,12 +25,17 @@ import {
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useFocusEffect } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { CalendarIcon, ChevronDownIcon, Wallet2Icon } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 
 export default function TransactionComposeScreen() {
+  const params = useLocalSearchParams<{
+    mode?: string;
+    accountId?: string;
+    toAccountId?: string;
+  }>();
   const [mode, setMode] = useState<(typeof TRANSACTION_MODES)[number]>('Expense');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -67,10 +72,36 @@ export default function TransactionComposeScreen() {
   const isTransfer = mode === 'Transfer';
 
   useEffect(() => {
-    if (!selectedAccountId && accounts.length > 0) {
-      setSelectedAccountId(accounts[0].id);
+    if (params.mode === 'transfer') {
+      setMode('Transfer');
     }
-  }, [accounts, selectedAccountId, setSelectedAccountId]);
+  }, [params.mode]);
+
+  useEffect(() => {
+    if (typeof params.accountId === 'string' && params.accountId.trim()) {
+      setSelectedAccountId(params.accountId);
+    }
+  }, [params.accountId, setSelectedAccountId]);
+
+  useEffect(() => {
+    if (typeof params.toAccountId === 'string' && params.toAccountId.trim()) {
+      setSelectedToAccountId(params.toAccountId);
+    }
+  }, [params.toAccountId, setSelectedToAccountId]);
+
+  useEffect(() => {
+    if (!selectedAccountId && accounts.length > 0) {
+      const fallbackAccount =
+        isTransfer && typeof params.toAccountId === 'string'
+          ? accounts.find(
+              (account) =>
+                account.id !== params.toAccountId && account.type !== 'CREDIT_CARD',
+            ) ?? accounts.find((account) => account.id !== params.toAccountId)
+          : accounts[0];
+
+      setSelectedAccountId(fallbackAccount?.id ?? accounts[0].id);
+    }
+  }, [accounts, isTransfer, params.toAccountId, selectedAccountId, setSelectedAccountId]);
 
   useEffect(() => {
     if (mode !== 'Transfer') {
@@ -110,6 +141,12 @@ export default function TransactionComposeScreen() {
   const selectedToAccount = accounts.find((account) => account.id === selectedToAccountId) ?? null;
   const quickCategories = useMemo(() => categories.slice(0, 4), [categories]);
   const numericAmount = Number.parseFloat(amount);
+  const isCardPayment = isTransfer && selectedToAccount?.type === 'CREDIT_CARD';
+  const screenTitle = isCardPayment ? 'Pay card' : `New ${mode}`;
+  const amountPrompt = isCardPayment ? 'Payment amount' : 'Amount';
+  const notePlaceholder = isCardPayment ? 'Optional note for this payment' : 'What was this for?';
+  const sourceSectionTitle = isCardPayment ? 'Pay from' : isTransfer ? 'From account' : 'Account';
+  const destinationSectionTitle = isCardPayment ? 'Card' : 'To account';
 
   const handleDateChange = (event: DateTimePickerEvent, nextDate?: Date) => {
     if (Platform.OS !== 'ios') {
@@ -254,7 +291,7 @@ export default function TransactionComposeScreen() {
             <View className="h-1.5 w-16 rounded-full bg-[#2a392f]" />
           </View>
 
-          <SheetHeader eyebrow="Quick Capture" title={`New ${mode}`} />
+          <SheetHeader eyebrow={isCardPayment ? 'Credit Card' : 'Quick Capture'} title={screenTitle} />
 
           <ScrollView
             className="mt-5"
@@ -282,7 +319,7 @@ export default function TransactionComposeScreen() {
 
               <View className="items-center px-4 pb-4 pt-8">
                 <Text className="text-[12px] font-semibold uppercase tracking-[2.6px] text-[#6f7d74]">
-                  Amount
+                  {amountPrompt}
                 </Text>
                 <View className="mt-4 flex-row items-end justify-center">
                   <Text className="mb-3 mr-1 text-[34px] font-medium text-[#6e7f75]">
@@ -308,8 +345,7 @@ export default function TransactionComposeScreen() {
                   <TextInput
                     value={note}
                     onChangeText={setNote}
-                    placeholder="What was this for?"
-                    // Keep this generic so it works for transfer notes too.
+                    placeholder={notePlaceholder}
                     placeholderTextColor="#7f8d85"
                     autoCorrect={false}
                     spellCheck={false}
@@ -327,7 +363,7 @@ export default function TransactionComposeScreen() {
               </View>
             </View>
 
-            <SectionHeader title={isTransfer ? 'From account' : 'Account'} />
+            <SectionHeader title={sourceSectionTitle} />
             {accountsQuery.isLoading ? (
               <Text className="text-sm text-[#7f8c86]">Loading accounts...</Text>
             ) : null}
@@ -428,7 +464,7 @@ export default function TransactionComposeScreen() {
 
             {isTransfer ? (
               <>
-                <SectionHeader title="To account" />
+                <SectionHeader title={destinationSectionTitle} />
                 {selectedToAccount ? (
                   <View className="rounded-[22px] border border-[#52d776] bg-[#111c16] p-4">
                     <View className="flex-row items-center justify-between gap-3">
@@ -466,7 +502,9 @@ export default function TransactionComposeScreen() {
                 ) : (
                   <View className="rounded-[24px] border border-dashed border-[#26402f] bg-[#0f1512] p-4">
                     <Text className="text-sm leading-6 text-[#7f8c86]">
-                      Choose where this transfer should land.
+                      {isCardPayment
+                        ? 'Choose the credit card you want to pay.'
+                        : 'Choose where this transfer should land.'}
                     </Text>
                     <Button
                       className="mt-4 h-12 self-start rounded-full bg-[#8bff62] px-5"
@@ -479,7 +517,7 @@ export default function TransactionComposeScreen() {
                         })
                       }>
                       <Text className="text-sm font-semibold text-[#07110a]">
-                        Select destination
+                        {isCardPayment ? 'Select card' : 'Select destination'}
                       </Text>
                     </Button>
                   </View>
@@ -591,7 +629,9 @@ export default function TransactionComposeScreen() {
               <Text className="text-sm text-[#ff8a94]">
                 {createTransferMutation.error instanceof Error
                   ? createTransferMutation.error.message
-                  : 'Failed to save transfer.'}
+                  : isCardPayment
+                    ? 'Failed to save payment.'
+                    : 'Failed to save transfer.'}
               </Text>
             ) : null}
 
@@ -602,8 +642,12 @@ export default function TransactionComposeScreen() {
               <Text className="text-base font-semibold text-[#07110a]">
                 {isTransfer
                   ? createTransferMutation.isPending
-                    ? 'Saving transfer...'
-                    : 'Save transfer'
+                    ? isCardPayment
+                      ? 'Saving payment...'
+                      : 'Saving transfer...'
+                    : isCardPayment
+                      ? 'Save payment'
+                      : 'Save transfer'
                   : createTransactionMutation.isPending
                     ? `Saving ${mode.toLowerCase()}...`
                     : `Save ${mode.toLowerCase()}`}
