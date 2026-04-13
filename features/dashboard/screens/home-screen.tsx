@@ -22,11 +22,12 @@ import { useTransactionsQuery } from '@/features/finance/hooks/use-transactions-
 import { useUser } from '@clerk/clerk-expo';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
 export default function HomeScreen() {
   const { user } = useUser();
+  const [now, setNow] = useState(() => new Date());
   const accountsQuery = useAccountsQuery();
   const plannedItemsQuery = usePlannedItemsQuery({ isActive: true });
   const transactionsQuery = useTransactionsQuery();
@@ -70,6 +71,22 @@ export default function HomeScreen() {
         .reduce((sum, transaction) => sum + Number(transaction.amount), 0),
     [recentTransactions]
   );
+  const dashboardTimeLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      }).format(now),
+    [now]
+  );
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <View className="flex-1 bg-[#060b08]">
@@ -82,6 +99,7 @@ export default function HomeScreen() {
           <AppPageHeader
             eyebrow="Dashboard"
             title={`${getGreeting()}, ${firstName}!`}
+            meta={dashboardTimeLabel}
             subtitle="Track balances, upcoming bills, and the categories shaping your month."
             inverted
           />

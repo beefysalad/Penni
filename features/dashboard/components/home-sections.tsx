@@ -60,24 +60,24 @@ export function HomeBalanceHero({
   return (
     <View className="rounded-[30px] border border-[#1b2a21] bg-[#111916] p-5">
       <View>
-        <Text className="text-sm font-medium text-white/65">Cash on hand</Text>
+        <Text className="text-sm font-medium text-white/65">Total Balance</Text>
         <Text className="mt-2 text-[34px] font-semibold tracking-[-1px] text-white">
           {formatCurrency(cashOnHand)}
         </Text>
         <Text className="mt-2 text-sm leading-5 text-[#7f8c86]">
-          Bank accounts, cash, and e-wallet balances available right now.
+          Combined balance across all your accounts and wallets.
         </Text>
       </View>
 
       <View className="mt-5 gap-3">
-        <View className="rounded-[24px] bg-[#1d1518] p-4">
-          <View className="size-10 items-center justify-center rounded-full bg-[#2a1b20]">
-            <Icon as={ArrowDownLeftIcon} className="size-5 text-[#ff8a94]" />
+        <View className={thisMonthSpend === 0 ? 'rounded-[24px] bg-[#18221d] p-4' : 'rounded-[24px] bg-[#1d1518] p-4'}>
+          <View className={thisMonthSpend === 0 ? 'size-10 items-center justify-center rounded-full bg-[#1f3325]' : 'size-10 items-center justify-center rounded-full bg-[#2a1b20]'}>
+            <Icon as={ArrowDownLeftIcon} className={thisMonthSpend === 0 ? 'size-5 text-[#8bff62]' : 'size-5 text-[#ff8a94]'} />
           </View>
           <Text className="mt-4 text-xs font-semibold uppercase tracking-[1.8px] text-[#93a19a]">
             This month spent
           </Text>
-          <Text className="mt-2 text-[17px] font-semibold leading-6 text-[#ff8a94]">
+          <Text className={thisMonthSpend === 0 ? 'mt-2 text-[17px] font-semibold leading-6 text-[#8bff62]' : 'mt-2 text-[17px] font-semibold leading-6 text-[#ff8a94]'}>
             {formatCurrency(thisMonthSpend)}
           </Text>
           <Text className="mt-1 text-sm leading-5 text-[#93a19a]">

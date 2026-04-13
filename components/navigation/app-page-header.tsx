@@ -6,6 +6,7 @@ import { View } from 'react-native';
 type AppPageHeaderProps = {
   eyebrow?: string;
   title: string;
+  meta?: string;
   subtitle?: string;
   inverted?: boolean;
 };
@@ -13,6 +14,7 @@ type AppPageHeaderProps = {
 export function AppPageHeader({
   eyebrow,
   title,
+  meta,
   subtitle,
   inverted = false,
 }: AppPageHeaderProps) {
@@ -35,6 +37,15 @@ export function AppPageHeader({
           )}>
           {title}
         </Text>
+        {meta ? (
+          <Text
+            className={cn(
+              'mt-2 text-[13px]',
+              inverted ? 'text-[#b6c2bb]' : 'text-[#6f7890]'
+            )}>
+            {meta}
+          </Text>
+        ) : null}
         {subtitle ? (
           <Text
             className={cn(
