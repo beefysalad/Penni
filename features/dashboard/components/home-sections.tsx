@@ -39,7 +39,8 @@ export function SkeletonHeroCard() {
 }
 
 export function HomeBalanceHero({
-  leftAfterRecurring,
+  cashOnHand,
+  thisMonthSpend,
   nextBillName,
   nextBillTiming,
   nextIncomeName,
@@ -47,7 +48,8 @@ export function HomeBalanceHero({
   onNewTransaction,
   onOpenAccounts,
 }: {
-  leftAfterRecurring: number;
+  cashOnHand: number;
+  thisMonthSpend: number;
   nextBillName: string;
   nextBillTiming: string;
   nextIncomeName: string;
@@ -55,28 +57,36 @@ export function HomeBalanceHero({
   onNewTransaction: () => void;
   onOpenAccounts: () => void;
 }) {
-  const isNegative = leftAfterRecurring < 0;
-
   return (
     <View className="rounded-[30px] border border-[#1b2a21] bg-[#111916] p-5">
-      <View className="flex-row items-start justify-between gap-4">
-        <View className="flex-1">
-          <Text className="text-sm font-medium text-white/65">Left after recurring</Text>
-          <Text
-            className={`mt-2 text-[34px] font-semibold tracking-[-1px] ${isNegative ? 'text-[#ff8a94]' : 'text-white'}`}>
-            {formatCurrency(leftAfterRecurring)}
-          </Text>
-        </View>
-        <View className={`rounded-full px-3 py-2 ${isNegative ? 'bg-[#2c1a1f]' : 'bg-[#1a2c1f]'}`}>
-          <Text
-            className={`text-xs font-semibold uppercase tracking-[1.8px] ${isNegative ? 'text-[#ff8a94]' : 'text-[#8bff62]'}`}>
-            {isNegative ? 'Tight' : 'Planned'}
-          </Text>
-        </View>
+      <View>
+        <Text className="text-sm font-medium text-white/65">Cash on hand</Text>
+        <Text className="mt-2 text-[34px] font-semibold tracking-[-1px] text-white">
+          {formatCurrency(cashOnHand)}
+        </Text>
+        <Text className="mt-2 text-sm leading-5 text-[#7f8c86]">
+          Bank accounts, cash, and e-wallet balances available right now.
+        </Text>
       </View>
 
-      <View className="mt-5 flex-row gap-3">
-        <View className="flex-1 rounded-[24px] bg-[#18221d] p-4">
+      <View className="mt-5 gap-3">
+        <View className="rounded-[24px] bg-[#1d1518] p-4">
+          <View className="size-10 items-center justify-center rounded-full bg-[#2a1b20]">
+            <Icon as={ArrowDownLeftIcon} className="size-5 text-[#ff8a94]" />
+          </View>
+          <Text className="mt-4 text-xs font-semibold uppercase tracking-[1.8px] text-[#93a19a]">
+            This month spent
+          </Text>
+          <Text className="mt-2 text-[17px] font-semibold leading-6 text-[#ff8a94]">
+            {formatCurrency(thisMonthSpend)}
+          </Text>
+          <Text className="mt-1 text-sm leading-5 text-[#93a19a]">
+            Expenses posted this month so far.
+          </Text>
+        </View>
+
+        <View className="flex-row gap-3">
+          <View className="flex-1 rounded-[24px] bg-[#18221d] p-4">
           <View className="size-10 items-center justify-center rounded-full bg-[#1f3325]">
             <Icon as={CalendarIcon} className="size-5 text-[#8bff62]" />
           </View>
@@ -89,8 +99,8 @@ export function HomeBalanceHero({
           <Text className="mt-1 text-sm leading-5 text-[#93a19a]">
             {nextBillTiming}
           </Text>
-        </View>
-        <View className="flex-1 rounded-[24px] bg-[#141b1f] p-4">
+          </View>
+          <View className="flex-1 rounded-[24px] bg-[#141b1f] p-4">
           <View className="size-10 items-center justify-center rounded-full bg-[#1c2830]">
             <Icon as={TrendingUpIcon} className="size-5 text-[#41d6b2]" />
           </View>
@@ -103,6 +113,7 @@ export function HomeBalanceHero({
           <Text className="mt-1 text-sm leading-5 text-[#93a19a]">
             {nextIncomeTiming}
           </Text>
+          </View>
         </View>
       </View>
 

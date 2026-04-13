@@ -1,4 +1,4 @@
-import type { PlannedItem } from '@/features/finance/lib/finance.types';
+import type { Account, PlannedItem, Transaction } from '@/features/finance/lib/finance.types';
 
 export function getDaysUntil(value: string) {
   const today = new Date();
@@ -29,6 +29,33 @@ export function getProjectedBalanceAfterRecurring(currentBalance: number, items:
     const amount = Number(item.amount);
     return item.type === 'INCOME' ? total + amount : total - amount;
   }, currentBalance);
+}
+
+export function getCashOnHand(accounts: Account[]) {
+  return accounts
+    .filter(
+      (account) =>
+        account.type === 'BANK_ACCOUNT' ||
+        account.type === 'CASH' ||
+        account.type === 'E_WALLET',
+    )
+    .reduce((sum, account) => sum + Number(account.balance), 0);
+}
+
+export function getThisMonthSpend(transactions: Transaction[]) {
+  const now = new Date();
+
+  return transactions
+    .filter((transaction) => {
+      const date = new Date(transaction.transactionAt);
+      return (
+        transaction.type === 'EXPENSE' &&
+        transaction.source !== 'TRANSFER' &&
+        date.getFullYear() === now.getFullYear() &&
+        date.getMonth() === now.getMonth()
+      );
+    })
+    .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
 }
 
 export function getPlannedItemsForRestOfMonth(items: PlannedItem[]) {

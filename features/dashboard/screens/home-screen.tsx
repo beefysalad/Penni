@@ -8,17 +8,17 @@ import {
   UpcomingSection,
 } from '@/features/dashboard/components/home-sections';
 import {
+  getCashOnHand,
   getGreeting,
   getNextPlannedItem,
   getPlannedItemsForRestOfMonth,
-  getProjectedBalanceAfterRecurring,
+  getThisMonthSpend,
   getUpcomingTimingLabel,
 } from '@/features/dashboard/lib/home-helpers';
 import { useAccountsQuery } from '@/features/finance/hooks/use-accounts-query';
 import { useBudgetsQuery } from '@/features/finance/hooks/use-budgets-query';
 import { usePlannedItemsQuery } from '@/features/finance/hooks/use-planned-items-query';
 import { useTransactionsQuery } from '@/features/finance/hooks/use-transactions-query';
-import { getNetWorth } from '@/features/finance/lib/selectors';
 import { useUser } from '@clerk/clerk-expo';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -35,21 +35,14 @@ export default function HomeScreen() {
   const firstName = user?.firstName || 'there';
   const accounts = accountsQuery.data ?? [];
   const allPlannedItems = plannedItemsQuery.data ?? [];
-  const monthScopedPlannedItems = useMemo(
-    () => getPlannedItemsForRestOfMonth(allPlannedItems),
-    [allPlannedItems]
-  );
   const plannedItems = allPlannedItems.slice(0, 5);
   const allTransactions = transactionsQuery.data ?? [];
   const recentTransactions = allTransactions.slice(0, 5);
   const budgets = budgetsQuery.data ?? [];
   const incomePlannedItems = plannedItems.filter((item) => item.type === 'INCOME');
   const expensePlannedItems = plannedItems.filter((item) => item.type === 'EXPENSE');
-  const totalBalance = getNetWorth(accounts);
-  const leftAfterRecurring = getProjectedBalanceAfterRecurring(
-    totalBalance,
-    monthScopedPlannedItems
-  );
+  const cashOnHand = getCashOnHand(accounts);
+  const thisMonthSpend = getThisMonthSpend(allTransactions);
   const nextBill = getNextPlannedItem(allPlannedItems, 'EXPENSE');
   const nextIncome = getNextPlannedItem(allPlannedItems, 'INCOME');
 
@@ -95,11 +88,12 @@ export default function HomeScreen() {
         </View>
 
         <View className="gap-5 px-6 pt-6">
-          {accountsQuery.isLoading ? (
+          {accountsQuery.isLoading || plannedItemsQuery.isLoading || transactionsQuery.isLoading ? (
             <SkeletonHeroCard />
           ) : (
             <HomeBalanceHero
-              leftAfterRecurring={leftAfterRecurring}
+              cashOnHand={cashOnHand}
+              thisMonthSpend={thisMonthSpend}
               nextBillName={nextBill?.title ?? 'Nothing due'}
               nextBillTiming={nextBillTiming}
               nextIncomeName={nextIncome?.title ?? 'Nothing incoming'}
