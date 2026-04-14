@@ -33,9 +33,17 @@ export function SocialConnections() {
   useWarmUpBrowser();
   const { colorScheme } = useColorScheme();
   const { startSSOFlow } = useSSO();
+  const [pendingStrategy, setPendingStrategy] =
+    React.useState<SocialConnectionStrategy | null>(null);
 
   function onSocialLoginPress(strategy: SocialConnectionStrategy) {
     return async () => {
+      if (pendingStrategy) {
+        return;
+      }
+
+      setPendingStrategy(strategy);
+
       try {
         // Start the authentication process by calling `startSSOFlow()`
         const { createdSessionId, setActive, signIn } = await startSSOFlow({
@@ -60,6 +68,8 @@ export function SocialConnections() {
       } catch (err) {
         // See https://go.clerk.com/mRUDrIe for more info on error handling
         console.error(JSON.stringify(err, null, 2));
+      } finally {
+        setPendingStrategy(null);
       }
     };
   }
@@ -72,6 +82,7 @@ export function SocialConnections() {
             key={strategy.type}
             variant="ghost"
             className="h-14 flex-row justify-center rounded-[20px] border border-[#1d2a20] bg-[#111916]"
+            disabled={pendingStrategy !== null}
             onPress={onSocialLoginPress(strategy.type)}>
             <Image
               className={cn('size-5', strategy.useTint && Platform.select({ web: 'dark:invert' }))}
@@ -80,7 +91,11 @@ export function SocialConnections() {
               })}
               source={strategy.source}
             />
-            <Text className="text-base font-semibold text-white">Continue with Google</Text>
+            <Text className="text-base font-semibold text-white">
+              {pendingStrategy === strategy.type
+                ? 'Connecting...'
+                : 'Continue with Google'}
+            </Text>
           </Button>
         );
       })}

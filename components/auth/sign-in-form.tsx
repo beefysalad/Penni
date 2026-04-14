@@ -3,34 +3,56 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useSignIn } from '@clerk/clerk-expo';
 import { Link, router } from 'expo-router';
+import { Controller, useForm } from 'react-hook-form';
 import * as React from 'react';
 import { type TextInput, View } from 'react-native';
+import { z } from 'zod';
+
+const signInSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, 'Email is required.')
+    .email('Enter a valid email address.'),
+  password: z.string().min(1, 'Password is required.'),
+});
+
+type SignInFormValues = z.infer<typeof signInSchema>;
 
 export function SignInForm() {
   const { signIn, setActive, isLoaded } = useSignIn();
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
   const passwordInputRef = React.useRef<TextInput>(null);
-  const [error, setError] = React.useState<{ email?: string; password?: string }>({});
+  const {
+    control,
+    handleSubmit,
+    setError,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<SignInFormValues>({
+    resolver: zodResolver(signInSchema),
+    mode: 'onSubmit',
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+  const email = watch('email');
 
-  async function onSubmit() {
+  async function onSubmit(values: SignInFormValues) {
     if (!isLoaded) {
       return;
     }
 
-    // Start the sign-in process using the email and password provided
     try {
       const signInAttempt = await signIn.create({
-        identifier: email,
-        password,
+        identifier: values.email.trim(),
+        password: values.password,
       });
 
-      // If sign-in process is complete, set the created session as active
-      // and redirect the user
       if (signInAttempt.status === 'complete') {
-        setError({ email: '', password: '' });
         await setActive({ session: signInAttempt.createdSessionId });
         return;
       }
@@ -40,7 +62,7 @@ export function SignInForm() {
         (signInAttempt as any)._status === 'needs_client_trust'
       ) {
         const emailCodeFactor = signInAttempt.supportedSecondFactors?.find(
-          (f) => f.strategy === 'email_code'
+          (factor) => factor.strategy === 'email_code'
         );
 
         if (emailCodeFactor) {
@@ -49,23 +71,26 @@ export function SignInForm() {
           });
           router.push({
             pathname: '/(auth)/verify-sign-in',
-            params: { email },
+            params: { email: values.email.trim() },
           });
           return;
         }
       }
 
-      // TODO: Handle other statuses
       console.error(JSON.stringify(signInAttempt, null, 2));
     } catch (err) {
-      // See https://go.clerk.com/mRUDrIe for more info on error handling
       if (err instanceof Error) {
         const isEmailMessage =
           err.message.toLowerCase().includes('identifier') ||
           err.message.toLowerCase().includes('email');
-        setError(isEmailMessage ? { email: err.message } : { password: err.message });
+
+        setError(isEmailMessage ? 'email' : 'password', {
+          type: 'server',
+          message: err.message,
+        });
         return;
       }
+
       console.error(JSON.stringify(err, null, 2));
     }
   }
@@ -76,74 +101,109 @@ export function SignInForm() {
 
   return (
     <View className="gap-6">
-      <View className="gap-5">
+      <View className="gap-4">
         <View className="gap-2">
-          <Text className="text-xs font-semibold uppercase tracking-[2px] text-[#6d786f]">
+          <Text className="pl-1 text-[10px] font-semibold uppercase tracking-[2.5px] text-[#6d786f]">
             Email
           </Text>
-          <Input
-            id="email"
-            placeholder="name@email.com"
-            placeholderTextColor="#6d786f"
-            keyboardType="email-address"
-            autoComplete="email"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-            onSubmitEditing={onEmailSubmitEditing}
-            returnKeyType="next"
-            className="h-14 rounded-[20px] border-[#1d2a20] bg-[#111916] px-4 text-white"
-          />
-          {error.email ? (
-            <Text className="text-sm font-medium text-[#ff8a94]">{error.email}</Text>
+          <View
+            className={`rounded-[18px] border bg-[#0c1510] ${
+              errors.email ? 'border-[#ff8a94]/50' : 'border-[#1a2820]'
+            }`}>
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <Input
+                  id="email"
+                  placeholder="name@email.com"
+                  placeholderTextColor="#3d4e44"
+                  keyboardType="email-address"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  value={value}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  onSubmitEditing={onEmailSubmitEditing}
+                  returnKeyType="next"
+                  className="h-14 border-0 bg-transparent px-4 text-white"
+                />
+              )}
+            />
+          </View>
+          {errors.email?.message ? (
+            <Text className="text-xs font-medium text-[#ff8a94]">
+              {errors.email.message}
+            </Text>
           ) : null}
         </View>
 
         <View className="gap-2">
-          <View className="flex-row items-center justify-between gap-4">
-            <Text className="text-xs font-semibold uppercase tracking-[2px] text-[#6d786f]">
+          <View className="flex-row items-center justify-between">
+            <Text className="pl-1 text-[10px] font-semibold uppercase tracking-[2.5px] text-[#6d786f]">
               Password
             </Text>
             <Link href={`/(auth)/forgot-password?email=${email}`} asChild>
               <Button variant="ghost" className="h-auto px-0 py-0">
-                <Text className="text-sm font-medium text-[#8bff62]">Forgot password?</Text>
+                <Text className="text-xs font-semibold text-[#8bff62]">
+                  Forgot password?
+                </Text>
               </Button>
             </Link>
           </View>
-          <Input
-            ref={passwordInputRef}
-            id="password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-            returnKeyType="done"
-            onSubmitEditing={onSubmit}
-            placeholder="Enter your password"
-            placeholderTextColor="#6d786f"
-            className="h-14 rounded-[20px] border-[#1d2a20] bg-[#111916] px-4 text-white"
-          />
-          {error.password ? (
-            <Text className="text-sm font-medium text-[#ff8a94]">{error.password}</Text>
+          <View
+            className={`rounded-[18px] border bg-[#0c1510] ${
+              errors.password ? 'border-[#ff8a94]/50' : 'border-[#1a2820]'
+            }`}>
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <Input
+                  ref={passwordInputRef}
+                  id="password"
+                  secureTextEntry
+                  value={value}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  returnKeyType="done"
+                  onSubmitEditing={() => void handleSubmit(onSubmit)()}
+                  placeholder="Enter your password"
+                  placeholderTextColor="#3d4e44"
+                  className="h-14 border-0 bg-transparent px-4 text-white"
+                />
+              )}
+            />
+          </View>
+          {errors.password?.message ? (
+            <Text className="text-xs font-medium text-[#ff8a94]">
+              {errors.password.message}
+            </Text>
           ) : null}
         </View>
 
-        <Button className="h-14 rounded-[22px] bg-[#8bff62]" onPress={onSubmit}>
-          <Text className="text-base font-semibold text-[#07110a]">Continue</Text>
+        <Button
+          className="mt-1 h-14 rounded-[18px] bg-[#8bff62]"
+          disabled={!isLoaded || isSubmitting}
+          onPress={() => void handleSubmit(onSubmit)()}>
+          <Text className="text-base font-bold text-[#07110a]">
+            {isSubmitting ? 'Signing in...' : 'Sign in'}
+          </Text>
         </Button>
       </View>
 
       <View className="gap-4">
-        <Text className="text-center text-sm text-[#95a39c]">
+        <Text className="text-center text-sm text-[#7a8c82]">
           Don&apos;t have an account?{' '}
-          <Link href="/(auth)/sign-up" className="font-semibold text-[#8bff62]">
+          <Link href="/(auth)/sign-up" className="font-bold text-[#8bff62]">
             Create one
           </Link>
         </Text>
 
-        <View className="flex-row items-center">
-          <Separator className="flex-1 bg-[#1d2a20]" />
-          <Text className="px-4 text-sm text-[#6d786f]">or continue with</Text>
-          <Separator className="flex-1 bg-[#1d2a20]" />
+        <View className="flex-row items-center gap-3">
+          <Separator className="flex-1 bg-[#1a2820]" />
+          <Text className="text-xs text-[#4a5c52]">or continue with</Text>
+          <Separator className="flex-1 bg-[#1a2820]" />
         </View>
 
         <SocialConnections />
