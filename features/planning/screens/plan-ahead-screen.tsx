@@ -13,7 +13,7 @@ import { useAccountsQuery } from '@/features/finance/hooks/use-accounts-query';
 import { useCategoriesQuery } from '@/features/finance/hooks/use-categories-query';
 import { useCreatePlannedItemMutation } from '@/features/finance/hooks/use-planned-items-query';
 import { createPlannedItemSchema } from '@/features/finance/lib/finance.schemas';
-import { formatDueDayOfMonth, formatRecurrencePhrase } from '@/features/finance/lib/formatters';
+import { formatCurrency, formatDueDayOfMonth, formatRecurrencePhrase } from '@/features/finance/lib/formatters';
 import { getPrimaryAssetAccount } from '@/features/finance/lib/selectors';
 import type { CategoryType, RecurrenceFrequency } from '@/features/finance/lib/finance.types';
 import DateTimePicker, {
@@ -456,36 +456,79 @@ export default function PlanAheadScreen() {
 
             <View className="rounded-[24px] border border-[#17211c] bg-[#0f1512] p-5">
               <Text className="text-xs font-semibold uppercase tracking-[2px] text-[#6f7d74]">
-                Preview
+                What this creates
               </Text>
-              <Text className="mt-3 text-lg font-semibold text-[#f4f7f5]">
+              <Text className="mt-3 text-[22px] font-semibold text-[#f4f7f5]">
                 {title || `${itemType} name`}
               </Text>
-              <Text className="mt-1 text-sm text-[#7f8c86]">
-                {itemType} • {previewDateLabel} {dueDateLabel} •{' '}
-                {formatRecurrencePhrase(RECURRENCE_MAP[recurringEvery], recurringEvery === 'Semi-monthly'
-                  ? [Number(semiMonthlyFirstDay), Number(semiMonthlySecondDay)].filter((day) => Number.isInteger(day))
-                  : undefined)}
+              <Text className="mt-1 text-sm leading-6 text-[#7f8c86]">
+                Penni will keep this on your schedule until you mark it {itemType === 'Bill' ? 'paid' : 'received'} or a matching transaction lands.
               </Text>
-              {selectedAccount ? (
-                <Text className="mt-2 text-xs text-[#93a19a]">
-                  {itemType === 'Bill' ? 'Pays from' : 'Deposits into'} {selectedAccount.name}
-                </Text>
-              ) : null}
-              {selectedCategory ? (
-                <Text className="mt-2 text-xs text-[#93a19a]">
-                  Category: {selectedCategory.name}
-                </Text>
-              ) : null}
-              {recurringEvery === 'Semi-monthly' ? (
-                <Text className="mt-2 text-xs text-[#93a19a]">
-                  {formatDueDayOfMonth(Number(semiMonthlyFirstDay)) ?? '--'} and{' '}
-                  {formatDueDayOfMonth(Number(semiMonthlySecondDay)) ?? '--'} each month
-                </Text>
-              ) : null}
-              <Text className="mt-4 text-[30px] font-semibold text-[#8bff62]">
-                ₱{amount || '0.00'}
+
+              <Text className="mt-5 text-[32px] font-semibold text-[#8bff62]">
+                {formatCurrency(amount || '0', 'PHP')}
               </Text>
+
+              <View className="mt-5 gap-3 rounded-[20px] bg-[#141d18] p-4">
+                <View className="flex-row items-start justify-between gap-4">
+                  <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-[#6f7d74]">
+                    {previewDateLabel}
+                  </Text>
+                  <Text className="flex-1 text-right text-sm font-semibold text-[#f4f7f5]">
+                    {dueDateLabel}
+                  </Text>
+                </View>
+
+                <View className="flex-row items-start justify-between gap-4">
+                  <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-[#6f7d74]">
+                    Repeats
+                  </Text>
+                  <Text className="flex-1 text-right text-sm font-semibold text-[#f4f7f5]">
+                    {formatRecurrencePhrase(
+                      RECURRENCE_MAP[recurringEvery],
+                      recurringEvery === 'Semi-monthly'
+                        ? [Number(semiMonthlyFirstDay), Number(semiMonthlySecondDay)].filter((day) =>
+                            Number.isInteger(day),
+                          )
+                        : undefined,
+                    )}
+                  </Text>
+                </View>
+
+                <View className="flex-row items-start justify-between gap-4">
+                  <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-[#6f7d74]">
+                    {itemType === 'Bill' ? 'Account' : 'Deposit'}
+                  </Text>
+                  <Text className="flex-1 text-right text-sm font-semibold text-[#f4f7f5]">
+                    {selectedAccount
+                      ? selectedAccount.name
+                      : itemType === 'Bill'
+                        ? 'Not linked yet'
+                        : 'Choose an account'}
+                  </Text>
+                </View>
+
+                <View className="flex-row items-start justify-between gap-4">
+                  <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-[#6f7d74]">
+                    Category
+                  </Text>
+                  <Text className="flex-1 text-right text-sm font-semibold text-[#f4f7f5]">
+                    {selectedCategory?.name ?? 'Choose a category'}
+                  </Text>
+                </View>
+
+                {recurringEvery === 'Semi-monthly' ? (
+                  <View className="flex-row items-start justify-between gap-4">
+                    <Text className="text-xs font-semibold uppercase tracking-[1.8px] text-[#6f7d74]">
+                      Days
+                    </Text>
+                    <Text className="flex-1 text-right text-sm font-semibold text-[#f4f7f5]">
+                      {formatDueDayOfMonth(Number(semiMonthlyFirstDay)) ?? '--'} and{' '}
+                      {formatDueDayOfMonth(Number(semiMonthlySecondDay)) ?? '--'}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
             </View>
 
             {createPlannedItemMutation.isError ? (

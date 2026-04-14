@@ -22,6 +22,10 @@ export type CreatePlannedItemInput = {
   isActive?: boolean;
 };
 
+export type CompletePlannedItemInput = {
+  transactionAt?: string;
+};
+
 export async function listPlannedItems(token: string, params?: ListPlannedItemsParams) {
   const response = await api.get<PlannedItem[]>('/planned-items', {
     params,
@@ -52,6 +56,18 @@ export async function deletePlannedItem(token: string, id: string) {
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: 'application/json',
+    },
+  });
+
+  return response.data;
+}
+
+export async function completePlannedItem(token: string, id: string, input?: CompletePlannedItemInput) {
+  const response = await api.patch<PlannedItem>(`/planned-items/${id}/complete`, input ?? {}, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
     },
   });
 

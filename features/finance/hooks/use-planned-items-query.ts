@@ -1,9 +1,11 @@
 import { useAuthenticatedRequest } from '@/features/auth/lib/use-authenticated-request';
 import {
   createPlannedItem,
+  completePlannedItem,
   listPlannedItems,
   deletePlannedItem,
   type CreatePlannedItemInput,
+  type CompletePlannedItemInput,
   type ListPlannedItemsParams,
 } from '@/features/finance/api/planned-items.api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -55,6 +57,21 @@ export function useDeletePlannedItemMutation() {
     },
     onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: ['planned-items'] });
+    },
+  });
+}
+
+export function useCompletePlannedItemMutation() {
+  const authenticatedRequest = useAuthenticatedRequest();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input?: CompletePlannedItemInput }) =>
+      authenticatedRequest((token) => completePlannedItem(token, id, input)),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['planned-items'] });
+      await queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      await queryClient.invalidateQueries({ queryKey: ['accounts'] });
     },
   });
 }
