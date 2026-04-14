@@ -177,23 +177,53 @@ export function ActivityEmptyState({ hasSearch }: { hasSearch: boolean }) {
 
 export function ActivityTransactionRow({
   transaction,
+  accountType,
   isLast,
 }: {
   transaction: Transaction;
+  accountType?: Transaction['accountId'] extends string | null ? import('@/features/finance/lib/finance.types').AccountType | null : never;
   isLast: boolean;
 }) {
   const isExpense = transaction.type === 'EXPENSE';
   const sign = isExpense ? '-' : '+';
   const isTransfer = transaction.source === 'TRANSFER';
+  const normalizedTitle = transaction.title.trim().toLowerCase();
+  const isWithdrawal = isTransfer && normalizedTitle.includes('withdraw');
+  const isDeposit = isTransfer && normalizedTitle.includes('deposit');
+  const looksLikePayment =
+    normalizedTitle === 'payment' ||
+    normalizedTitle.includes('pay card') ||
+    normalizedTitle.includes('card payment');
+  const isCreditCardAccount = accountType === 'CREDIT_CARD';
+  const isCardPayment = isTransfer && (isCreditCardAccount || looksLikePayment);
   const amountColor = isTransfer ? 'text-[#ffd66b]' : isExpense ? 'text-[#ff8a94]' : 'text-[#41d6b2]';
   const iconBg = isTransfer ? 'bg-[#2a2412]' : isExpense ? 'bg-[#241719]' : 'bg-[#16211b]';
+  const displayTitle = isTransfer
+    ? isCardPayment
+      ? isCreditCardAccount
+        ? 'Payment received'
+        : 'Card payment'
+      : isWithdrawal
+        ? 'Withdrawal'
+        : isDeposit
+          ? 'Deposit'
+          : transaction.type === 'INCOME'
+            ? 'Transfer received'
+            : 'Transfer sent'
+    : transaction.title;
   const sourceLabel =
     transaction.source === 'RECURRING'
       ? 'Recurring'
       : transaction.source === 'IMPORTED'
         ? 'Imported'
         : transaction.source === 'TRANSFER'
-          ? 'Transfer'
+          ? isCardPayment
+            ? 'Card payment'
+            : isWithdrawal
+              ? 'Withdrawal'
+              : isDeposit
+                ? 'Deposit'
+                : 'Transfer'
           : null;
 
   return (
@@ -210,7 +240,9 @@ export function ActivityTransactionRow({
         </View>
 
         <View className="min-w-0 flex-1">
-          <Text className="text-[16px] font-semibold text-[#f4f7f5]" numberOfLines={1}>{transaction.title}</Text>
+          <Text className="text-[16px] font-semibold text-[#f4f7f5]" numberOfLines={1}>
+            {displayTitle}
+          </Text>
           <View className="mt-1 flex-row flex-wrap items-center gap-2">
             <Text className="text-[13px] text-[#6d786f]">{formatShortDate(transaction.transactionAt)}</Text>
             {sourceLabel ? (

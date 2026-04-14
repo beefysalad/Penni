@@ -17,7 +17,8 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.jpatrickzxc.penni-mobile"
+      "bundleIdentifier": "com.jpatrickzxc.penni-mobile",
+      "appleTeamId": "446287J5H2"
     },
     "android": {
       "adaptiveIcon": {
